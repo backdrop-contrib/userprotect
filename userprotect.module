@@ -11,7 +11,7 @@
 function userprotect_form_alter($form_id, &$form) {
 
   // Nothing to do if root user is bypassing
-  if (userprotect_root_user_bypass()) {
+  if (userprotect_root_user_bypass() || userprotect_admin_user_bypass()) {
     return;
   }
 
@@ -184,7 +184,7 @@ function userprotect_menu($may_cache)
 	// are invoked for user/x/edit and user/x/delete.
 	else {
 	  $uid = arg(1);
-	  if (arg(0) == 'user' && is_numeric($uid) && !userprotect_root_user_bypass()) {
+	  if (arg(0) == 'user' && is_numeric($uid) && !userprotect_root_user_bypass() && !userprotect_admin_user_bypass()) {
 	    $account = user_load(array('uid' => $uid));
       switch (arg(2)) {
         case 'edit':
@@ -452,6 +452,12 @@ function userprotect_admin() {
     '#description' => t('If selected, the root user (uid 1) will be allowed to bypass all protections provided by this module.'),
     '#default_value' => variable_get('userprotect_uid_1_bypass', TRUE),
   );
+  // A checkbox to enable the 'administer users' bypass functionality (disabled by default).
+  $form['userprotect_admin_user_bypass'] = array('#type' => 'checkbox',
+    '#title' => t('Allow \'administer users\' bypass'),
+    '#description' => t('If selected, users with the \'administer users\' permission will be allowed to bypass all protections provided by this module.'),
+    '#default_value' => variable_get('userprotect_admin_user_bypass', FALSE),
+  );
 
   /**
    * Role protection table.
@@ -543,6 +549,7 @@ function userprotect_admin_submit($form_id, $form_values) {
   variable_set('userprotect_protection_defaults', $protections);
   variable_set('userprotect_autoprotect', $form_values['userprotect_autoprotect']);
   variable_set('userprotect_uid_1_bypass', $form_values['userprotect_uid_1_bypass']);
+  variable_set('userprotect_admin_user_bypass', $form_values['userprotect_admin_user_bypass']);
   variable_set('userprotect_role_protections', $form_values['role_protection']);
   drupal_set_message(t('Settings saved.'));
 }
@@ -713,6 +720,15 @@ function userprotect_get_username($uid) {
 function userprotect_root_user_bypass() {
   global $user;
   return variable_get('userprotect_uid_1_bypass', TRUE) && $user->uid == 1;
+}
+
+/**
+ * Checks to see if users with the 'administer users' permission can bypass protections.
+ *
+ * @return TRUE if the current user can bypass, FALSE otherwise.
+ */
+function userprotect_admin_user_bypass() {
+  return variable_get('userprotect_admin_user_bypass', FALSE) && user_access('administer users');
 }
 
 /**

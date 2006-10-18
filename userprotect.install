@@ -39,6 +39,7 @@ function userprotect_uninstall() {
   variable_del('userprotect_protection_defaults');
   variable_del('userprotect_autoprotect');
   variable_del('userprotect_uid_1_bypass');
+  variable_del('userprotect_admin_user_bypass');
   variable_del('userprotect_role_protections');
 
   if ($query1) {
