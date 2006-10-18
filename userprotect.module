@@ -3,6 +3,92 @@
 // $Id$
 
 /**
+ * Implementation of hook_help().
+ *
+ * Returns various help texts.
+ */
+function userprotect_help($section) {
+	switch ($section) {
+		case 'admin/user/userprotect':
+		  $output = t('For more information on how to configure userprotect settings, see the !help', array('!help' => l(t('help section'), 'admin/help/userprotect')));
+			return $output;
+	  case 'admin/user/protected_users':
+	    $output = t('For more information on how to configure users for protection, see the !help', array('!help' => l(t('help section'), 'admin/help/userprotect')));
+			return $output;
+	  case 'admin/help#userprotect':
+
+		  $admin = t('administer');
+		  $user_mgmt = t('user management');
+		  $userprotect = t('userprotect settings');
+		  $protected_users = t('protected users');
+		  $users = t('users');
+		  $pointer = ' -> ';
+
+		  $output = t('<p>This module provides various editing protection for users.  The protections can
+be specific to a user, or applied to all users in a role. The following protections
+are supported:</p>
+<ul>
+  <li>username</li>
+  <li>e-mail address</li>
+  <li>password</li>
+  <li>status changes</li>
+  <li>roles</li>
+  <li>deletion</li>
+  <li>all edits (any accessed via user/X/edit)</li>
+</ul>
+
+<p>When a protection is enabled for a specified user or an entire role, it takes effect
+for all editing operations that any user might try to perform on the user in question
+(exceptions listed below).   The the module will protect fields by disabling them at user/X/edit.<p>
+
+<p>These protections are valid both when trying to edit the user directly from their
+user/X/edit page, or using the mass user editing operations at !admin_user.</p>
+
+<p>The module also provides protection at the paths user/X/edit and user/X/delete,
+should anyone try to visit those paths directly.</p>
+
+
+<h4>SETTINGS:</h4>
+
+<p>At !userprotect_settings, you\'ll find the general
+settings for the module.  Most of it should be pretty self-explanatory.</p>
+
+<p>In particular, note the available bypass settings--both the root user (uid 1) and
+users with the \'administer users\' permission can be allowed to bypass the
+configured protections.</p>
+
+
+<h4>ADDING PROTECTIONS FOR ROLES:</h4>
+
+<p>This is done at !userprotect_settings.  <em>Be
+cautious</em> about adding protections by role, or you can lock out users from things
+unintentionally!</p>
+
+<p>In particular, note the if you enable role protections for a specific role, and you have
+no bypasses enabled, you\'ve effectively locked out any role editing for that role by
+anybody, unless you come back to the settings page and disable the role
+protection!</p>
+
+
+<h4>ADDING PROTECTIONS FOR A SINGLE USER:</h4>
+
+<p>This is done at !protected users.  Any time
+a user is added for protection, they will initially receive the default protections
+enabled in the settings area.</p>
+
+
+<h4>HOW THE MODULE DETERMINES A PROTECTION:</h4>
+
+<p>First it checks if the current user is allowed to bypass all protections.  If so, then
+it stops there.  If not, it first examines all the roles of the user in question for role
+protections, then examines the individual user\'s protections.  If a protection exists
+in any of the user\'s roles or for the user themselves, then the protection is active
+for that user.</p>', array('!admin_user' => l($admin . $pointer .$user_mgmt . $pointer . $users, 'admin/user/user'), '!userprotect_settings' => l($admin . $pointer .$user_mgmt . $pointer . $userprotect, 'admin/user/userprotect'), '!protected users' => l($admin . $pointer .$user_mgmt . $pointer . $protected_users, 'admin/user/protected_users')));
+			return $output;
+	}
+}
+
+/**
  * Alters forms for user protection.
  *
  * @param $form_id The form ID.
@@ -443,7 +529,7 @@ function userprotect_admin() {
   // A set of checkboxes that lists the default protection settings.
   $form['userprotect_protection_defaults'] = array('#type' => 'checkboxes',
     '#title' => t('Protection defaults'),
-    '#description' => t('The selected protections will be assigned to users when they are first added for protection'),
+    '#description' => t('The selected protections will be assigned to users when they are first added for protection.'),
     '#options' => $options,
     '#default_value' => $defaults,
   );
@@ -532,7 +618,9 @@ function theme_userprotect_admin_role_table($form) {
   }
 
   // Theme the table.
-  $output = theme('table', $form['#header'], $rows);
+  $output = t('<h3>Protections by role</h3>');
+  $output .= theme('table', $form['#header'], $rows);
+  $output .= t('<div class="description">Setting a protection for a role will enable that protection for all users in the role.</div>');
   $output .= drupal_render($form);
 
   return $output;
