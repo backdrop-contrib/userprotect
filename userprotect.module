@@ -56,9 +56,16 @@ function userprotect_form_alter($form_id, &$form) {
       // the user's account info into the form so it's available to gleen the role
       // info from.
       if (userprotect_get_role_protection($account->roles, 'up_roles') || userprotect_get_user_protection($account->uid, 'up_roles')) {
-        $form['account']['roles']['#disabled'] = TRUE;
-        $form['account']['roles']['#account'] = $account;
-        $form['account']['roles']['#validate'] = userprotect_add_validation($form['account']['roles']['#validate'], array('userprotect_user_edit_fields_validate' => array($account, 'roles')));
+        // Special case to diaable the roleassign module's roles if they exist.
+        if (isset($form['account']['roleassign_roles'])) {
+          $roles = 'roleassign_roles';
+        }
+        else {
+          $roles = 'roles';
+        }
+        $form['account'][$roles]['#disabled'] = TRUE;
+        $form['account'][$roles]['#account'] = $account;
+        $form['account'][$roles]['#validate'] = userprotect_add_validation($form['account']['roles']['#validate'], array('userprotect_user_edit_fields_validate' => array($account, 'roles')));
         $protected = TRUE;
       }
       // Nothing special for delete==just disable.
@@ -118,7 +125,9 @@ function userprotect_user_edit_fields_validate($form, $account, $field) {
       unset($account->roles[2]);
       // Add values for all role checkboxes that are valid roles for this user.
       foreach ($account->roles as $rid => $role) {
-      	form_set_value($form[$rid], 1);
+        if (isset($form[$rid])) {
+          form_set_value($form[$rid], 1);
+        }
       }
       break;
   }
