@@ -1,0 +1,50 @@
+<?php
+
+// $Id$
+
+/**
+ * Implementation of hook_install().
+ */
+function userprotect_install() {
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $query1 = db_query("CREATE TABLE {userprotect} (
+                  uid int(10) unsigned NOT NULL default '0',
+                  up_name int(1) unsigned NOT NULL default '0',
+                  up_mail int(1) unsigned NOT NULL default '0',
+                  up_pass int(1) unsigned NOT NULL default '0',
+                  up_status int(1) unsigned NOT NULL default '0',
+                  up_roles int(1) unsigned NOT NULL default '0',
+                  up_delete int(1) unsigned NOT NULL default '0',
+                  up_edit int(1) unsigned NOT NULL default '0',
+                  PRIMARY KEY (uid)
+                ) /*!40100 DEFAULT CHARACTER SET UTF8 */ ");
+      break;
+  }
+
+  if ($query1) {
+    drupal_set_message('The User Protect module was installed successfully.');
+  }
+  else {
+    drupal_set_message('There was an error installing the User Protect database tables.', 'error');
+  }
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function userprotect_uninstall() {
+  $query1 = db_query('DROP TABLE {userprotect}');
+  variable_del('userprotect_protection_defaults');
+  variable_del('userprotect_autoprotect');
+  variable_del('userprotect_uid_1_bypass');
+  variable_del('userprotect_role_protections');
+
+  if ($query1) {
+    drupal_set_message('The User Protect module was uninstalled successfully.');
+  }
+  else {
+    drupal_set_message('There was an error removing the User Protect database tables.', 'error');
+  }
+}
