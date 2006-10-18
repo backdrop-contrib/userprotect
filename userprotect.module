@@ -212,6 +212,13 @@ function userprotect_menu($may_cache)
 }
 
 /**
+ * Implementation of hook_perm().
+ */
+function userprotect_perm() {
+  return array('protect users', 'admin userprotect');
+}
+
+/**
  * Implementation of hook_user().
  */
 function userprotect_user($op, &$edit, &$account) {
