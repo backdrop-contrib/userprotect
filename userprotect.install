@@ -20,10 +20,12 @@ function userprotect_install() {
                   up_edit int(1) unsigned NOT NULL default '0',
                   PRIMARY KEY (uid)
                 ) /*!40100 DEFAULT CHARACTER SET UTF8 */ ");
+      $query2 = db_query('INSERT INTO {userprotect} VALUES (0, 0, 0, 0, 1, 0, 1, 0)');
+      $query3 = db_query('INSERT INTO {userprotect} VALUES (1, 0, 0, 0, 1, 0, 1, 0)');
       break;
   }
 
-  if ($query1) {
+  if ($query1 && $query2 && $query3) {
     drupal_set_message('The User Protect module was installed successfully.');
   }
   else {

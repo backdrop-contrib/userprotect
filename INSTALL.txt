@@ -17,3 +17,6 @@ written by Chad Phillips: thehunmonkgroup at yahoo dot com
     desire.
 5. Protection by roles takes effect immediately.  To individually protect a user,
     visit administer -> user management -> protected users.
+
+Upon initial module installation, the anonymous user and the root user receive
+protection from status changes and deletion.
