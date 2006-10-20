@@ -18,10 +18,12 @@ function userprotect_install() {
                   up_roles int(1) unsigned NOT NULL default '0',
                   up_delete int(1) unsigned NOT NULL default '0',
                   up_edit int(1) unsigned NOT NULL default '0',
-                  PRIMARY KEY (uid)
+                  up_type char(20) NOT NULL default '',
+                  UNIQUE KEY uid_up_type (uid, up_type)
                 ) /*!40100 DEFAULT CHARACTER SET UTF8 */ ");
-      $query2 = db_query('INSERT INTO {userprotect} VALUES (0, 0, 0, 0, 1, 0, 1, 0)');
-      $query3 = db_query('INSERT INTO {userprotect} VALUES (1, 0, 0, 0, 1, 0, 1, 0)');
+      $query2 = db_query("INSERT INTO {userprotect} VALUES (0, 0, 0, 0, 0, 0, 1, 1, 'user')");
+      $query3 = db_query("INSERT INTO {userprotect} VALUES (1, 0, 0, 0, 0, 0, 1, 1, 'user')");
+      $query3 = db_query("INSERT INTO {userprotect} VALUES (1, 1, 1, 1, 1, 1, 1, 1, 'admin')");
       break;
   }
 
@@ -40,8 +42,7 @@ function userprotect_uninstall() {
   $query1 = db_query('DROP TABLE {userprotect}');
   variable_del('userprotect_protection_defaults');
   variable_del('userprotect_autoprotect');
-  variable_del('userprotect_uid_1_bypass');
-  variable_del('userprotect_admin_user_bypass');
+  variable_del('userprotect_administrator_bypass_defaults');
   variable_del('userprotect_role_protections');
 
   if ($query1) {

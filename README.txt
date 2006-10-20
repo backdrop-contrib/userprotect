@@ -6,62 +6,119 @@ User Protect Module -- README
 written by Chad Phillips: thehunmonkgroup at yahoo dot com
 ****************************************************
 
-This module provides various editing protection for users.  The protections can
+This module provides various editing protection for users. The protections can
 be specific to a user, or applied to all users in a role. The following protections
 are supported:
 
-  username
-  e-mail address
-  password
-  status changes
-  roles
-  deletion
-  all edits (any accessed via user/X/edit)
+  -- username
+  -- e-mail address
+  -- password
+  -- status changes
+  -- roles
+  -- deletion
+  -- all edits (any accessed via user/X/edit)
 
-When a protection is enabled for a specified user or an entire role, it takes effect
-for all editing operations that any user might try to perform on the user in question
-(exceptions listed below).   The the module will protect fields by disabling them at user/X/edit.
+When a protection is enabled for a specified user (or the protection is enabled
+because the user belongs to a role that has the protection), it prevents the
+editing operation in question that anyone might try to perform on the
+user--unless an administrator who is permitted to bypass the protection is
+editing the specified user. The module will protect fields by disabling them at
+user/X/edit.
 
-These protections are valid both when trying to edit the user directly from their
-user/X/edit page, or using the mass user editing operations at admin/user/user.
+User administrators my be configured to bypass specified protections, on either
+a global or per-administrator basis.
+
+These protections are valid both when trying to edit the user directly from
+their user/X/edit page, or using the mass user editing operations.
 
 The module also provides protection at the paths user/X/edit and user/X/delete,
 should anyone try to visit those paths directly.
 
+Note: this module is compatible with the RoleAssign module.
 
 SETTINGS:
+At administer -> user management -> userprotect, you'll find the settings for the
+module. When the module is initially enabled, the default settings are such:
 
-At administer -> user management -> userprotect settings, you'll find the general
-settings for the module.  Most of it should be pretty self-explanatory.
+  -- User administrators bypass all protections.
+  -- The root user specifically bypasses all protections.
+  -- The anonymous user is specifically protected from all edits.
+  -- The root user is specifically protected from all edits.
+  -- All role protections are disabled.
 
-In particular, note the available bypass settings--both the root user (uid 1) and
-users with the 'administer users' permission can be allowed to bypass the
-configured protections.
+This effectively amounts to no protections. It is suggested that you turn off as
+many default administrator bypass settings as possible, and set bypass
+settings for specific user administrators--this allows you to take advantage
+of the status, roles, deletion, and edit protections in a meaningful way. Because
+of the per-user bypass/protection settings for the anonymous and root user,
+this will also begin protecting those users, without compromising the root
+user's access to the entire site.
 
+Important note: In order to protect a user from a deletion by visiting the
+user/X/delete directly, you must enable the 'delete' protection specifically.
+The 'all account edits' protection only disables the delete button at user/X/edit!
 
-ADDING PROTECTIONS FOR ROLES:
-
-This is done at administer -> user management -> userprotect settings.  Be
-cautious about adding protections by role, or you can lock out users from things
-unintentionally!
-
-In particular, note the if you enable role protections for a specific role, and you have
-no bypasses enabled, you've effectively locked out any role editing for that role by
-anybody, unless you come back to the settings page and disable the role
-protection!
-
+Also note that this module only provides protection against actions via the
+website interface--operations that a module takes directly are not protected!
+This module should play well with other contributed modules, but there is no
+guarantee that all protections will remain intact if you install modules outside
+of the drupal core installation.
 
 ADDING PROTECTIONS FOR A SINGLE USER:
+This is done at administer -> user management -> userprotect -> protected users.
+Any time a user is added for protection, they will initially receive the default
+protections enabled at 
+administer -> user management -> userprotect -> protection defaults.
 
-This is done at administer -> user management -> protected users.  Any time
-a user is added for protection, they will initially receive the default protections
-enabled in the settings area.
+ADDING PROTECTIONS FOR ROLES:
+This is done at administer -> user management -> userprotect -> protected roles.
+Be cautious about adding protections by role, or you can lock out users from
+things unintentionally!
 
+In particular, note the if you enable role protections for a specific role, and you
+have no bypasses enabled, you've effectively locked out any role editing for
+that role by anybody, unless you come back to the settings page and disable
+the role protection!
+
+ADDING ADMINISTRATOR BYPASS RULES:
+One of the more powerful features of the module are the administrator bypass
+settings. Any user that has been granted the 'administer users' permission can
+be configured to bypass any protection, either via the default administrator
+bypass settings at 
+administer -> user management -> userprotect -> protection defaults, or via
+a per-administrator setting at 
+administer -> user management -> userprotect -> administrator bypass. If a
+bypass is enabled for a user administrator, they will be given editing rights on
+that protection regardless if it is enabled for a single user or an entire role.
+
+Note that the per-administrator bypass settings override the default bypass
+settings.
+
+DEFAULT PROTECTION SETTINGS:
+Set the default protections for newly protected users at
+administer -> user management -> userprotect -> protection defaults. In
+addition, you can enable the auto-protect feature, which will automatically
+add the default protections to any newly created user accounts, and set default
+bypass options for all user administrators.
 
 HOW THE MODULE DETERMINES A PROTECTION:
+In order to properly use User Protect, it's important to understand how the
+module determines if a specified field is to be protected. Here is the basic
+logic:
 
-First it checks if the current user is allowed to bypass all protections.  If so, then
-it stops there.  If not, it first examines all the roles of the user in question for role
-protections, then examines the individual user's protections.  If a protection exists
-in any of the user's roles or for the user themselves, then the protection is active
-for that user.
+  -- If the current user is a user administrator, check if they have per-administrator
+     bypass settings. If so, then check to see if they are allowed to bypass the
+     protection. If so, then stop the checks and allow editing of the field.
+
+  -- If not, then if the current user is a user administrator, check if the default
+     administrator bypass is enabled for the protection in question. If so, then
+     stop the checks and allow editing of the field.
+
+  -- If not, check if the protection is set for the individual user being edited.
+     If so, then stop the checks here, and prevent editing of the field (this
+     effectively means that individual protections override role protections).
+
+  -- If not, then examine all the roles for the user being edited. If any of those
+     roles have the protection enabled, then prevent editing of the field.
+
+  -  If not, then allow the field to be edited.

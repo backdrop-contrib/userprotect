@@ -7,16 +7,17 @@ written by Chad Phillips: thehunmonkgroup at yahoo dot com
 ****************************************************
 
 1. Place the entire folder in your /modules directory, or a /modules directory
-    in a mulitsite folder.
-2. Enable the module at administer -> site building -> modules.
-3. Visit administer -> user management -> access control, and grant users
-   permissions to either add/remove protections for single users, or to
-   administer the module settings.
-4. Visit administer -> user management -> userprotect settings, and set the default
-    protections for individuals and roles, and any other settings changes you
-    desire.
-5. Protection by roles takes effect immediately.  To individually protect a user,
-    visit administer -> user management -> protected users.
+    in a mulitsite folder, or in the /sites/all directory.
 
-Upon initial module installation, the anonymous user and the root user receive
-protection from status changes and deletion.
+2. Enable the module at administer -> site building -> modules.
+
+3. Visit administer -> user management -> access control, and grant users
+   permissions to administer the module.
+
+4. Visit administer -> user management -> userprotect to set up the module.
+   See the help located at administer -> help -> userprotect for details
+   on how to properly configure the module for your needs.
+
+5. Protection by roles takes effect immediately for all users that belong to
+   the role.  Individual user protections override the role protections for
+   the given user.
