@@ -96,11 +96,6 @@ for that user.</p>', array('!admin_user' => l($admin . $pointer . $user_mgmt . $
  */
 function userprotect_form_alter($form_id, &$form) {
 
-  // Nothing to do if root user is bypassing
-  if (userprotect_root_user_bypass() || userprotect_admin_user_bypass()) {
-    return;
-  }
-
   $account = user_load(array('uid' => arg(1)));
 
   switch ($form_id) {
@@ -110,7 +105,7 @@ function userprotect_form_alter($form_id, &$form) {
     // then disable the field, and mark a fixed form value so it will be properly submitted.
     case 'user_edit':
       $protected = FALSE;
-      if (userprotect_get_role_protection($account->roles, 'up_name') || userprotect_get_user_protection($account->uid, 'up_name')) {
+      if ((userprotect_get_role_protection($account->roles, 'up_name') || userprotect_get_user_protection($account->uid, 'up_name')) && !userprotect_root_user_bypass('up_name') && !userprotect_admin_user_bypass('up_name')) {
         // If for some reason this field has no initial value, then don't protect it.
         if ($account->name) {
           $form['account']['name']['#disabled'] = TRUE;
@@ -118,7 +113,7 @@ function userprotect_form_alter($form_id, &$form) {
           $protected = TRUE;
         }
       }
-      if (userprotect_get_role_protection($account->roles, 'up_mail') || userprotect_get_user_protection($account->uid, 'up_mail')) {
+      if ((userprotect_get_role_protection($account->roles, 'up_mail') || userprotect_get_user_protection($account->uid, 'up_mail')) && !userprotect_root_user_bypass('up_mail') && !userprotect_admin_user_bypass('up_mail')) {
         // If for some reason this field has no initial value, then don't protect it.
         if ($account->mail) {
           $form['account']['mail']['#disabled'] = TRUE;
@@ -128,11 +123,11 @@ function userprotect_form_alter($form_id, &$form) {
       }
       // Password is an exception, as it needs no value, plus it's expanded.
       // Handle the disabling of it in the after build phase.
-      if (userprotect_get_role_protection($account->roles, 'up_pass') || userprotect_get_user_protection($account->uid, 'up_pass')) {
+      if ((userprotect_get_role_protection($account->roles, 'up_pass') || userprotect_get_user_protection($account->uid, 'up_pass')) && !userprotect_root_user_bypass('up_pass') && !userprotect_admin_user_bypass('up_pass')) {
         $form['account']['pass']['#after_build'] = array('userprotect_disable_password');
         $protected = TRUE;
       }
-      if (userprotect_get_role_protection($account->roles, 'up_status') || userprotect_get_user_protection($account->uid, 'up_status')) {
+      if ((userprotect_get_role_protection($account->roles, 'up_status') || userprotect_get_user_protection($account->uid, 'up_status')) && !userprotect_root_user_bypass('up_status') && !userprotect_admin_user_bypass('up_status')) {
         $form['account']['status']['#disabled'] = TRUE;
         $form['account']['status']['#value'] = $account->status;
         $protected = TRUE;
@@ -141,7 +136,7 @@ function userprotect_form_alter($form_id, &$form) {
       // We'll handle that in a custom validation function. Also here we slip
       // the user's account info into the form so it's available to gleen the role
       // info from.
-      if (userprotect_get_role_protection($account->roles, 'up_roles') || userprotect_get_user_protection($account->uid, 'up_roles')) {
+      if ((userprotect_get_role_protection($account->roles, 'up_roles') || userprotect_get_user_protection($account->uid, 'up_roles')) && !userprotect_root_user_bypass('up_roles') && !userprotect_admin_user_bypass('up_roles')) {
         // Special case to diaable the roleassign module's roles if they exist.
         if (isset($form['account']['roleassign_roles'])) {
           $roles = 'roleassign_roles';
@@ -155,7 +150,7 @@ function userprotect_form_alter($form_id, &$form) {
         $protected = TRUE;
       }
       // Nothing special for delete==just disable.
-      if (userprotect_get_role_protection($account->roles, 'up_delete') || userprotect_get_user_protection($account->uid, 'up_delete')) {
+      if ((userprotect_get_role_protection($account->roles, 'up_delete') || userprotect_get_user_protection($account->uid, 'up_delete')) && !userprotect_root_user_bypass('up_delete') && !userprotect_admin_user_bypass('up_delete')) {
         $form['delete']['#disabled'] = TRUE;
         $protected = TRUE;
       }
@@ -270,13 +265,13 @@ function userprotect_menu($may_cache)
 	// are invoked for user/x/edit and user/x/delete.
 	else {
 	  $uid = arg(1);
-	  if (arg(0) == 'user' && is_numeric($uid) && !userprotect_root_user_bypass() && !userprotect_admin_user_bypass()) {
+	  if (arg(0) == 'user' && is_numeric($uid)) {
 	    $account = user_load(array('uid' => $uid));
       switch (arg(2)) {
         case 'edit':
           // Check to see if the user's roles are protecting edits, or the user
           // themselves is protected
-          if (userprotect_get_role_protection($account->roles, 'up_edit') || userprotect_get_user_protection($uid, 'up_edit')) {
+          if ((userprotect_get_role_protection($account->roles, 'up_edit') || userprotect_get_user_protection($uid, 'up_edit')) && !userprotect_root_user_bypass('up_edit') && !userprotect_admin_user_bypass('up_edit')) {
             // If so, set a message and kick 'em out.
             drupal_set_message(t('%user is currently being protected from any edits.', array('%user' => $account->name)), 'error');
             drupal_goto("user/$uid");
@@ -285,7 +280,7 @@ function userprotect_menu($may_cache)
         // Check to see if the user's roles are protecting deletion, or the user
         // themselves is protected
         case 'delete':
-          if (userprotect_get_role_protection($account->roles, 'up_delete') || userprotect_get_user_protection($uid, 'up_delete')) {
+          if ((userprotect_get_role_protection($account->roles, 'up_delete') || userprotect_get_user_protection($uid, 'up_delete')) && !userprotect_root_user_bypass('up_delete') && !userprotect_admin_user_bypass('up_delete')) {
             // If so, set a message and kick 'em out.
             drupal_set_message(t('%user is currently being protected from deletion.', array('%user' => $account->name)), 'error');
             drupal_goto("user/$uid");
@@ -314,7 +309,7 @@ function userprotect_user($op, &$edit, &$account) {
     case 'insert':
       if (variable_get('userprotect_autoprotect', FALSE)) {
         userprotect_add_user($account->uid);
-        drupal_set_message(userprotect_display_protections($account), 'error');
+        drupal_set_message(userprotect_display_protections($account, TRUE), 'error');
       }
       break;
     // Remove a deleted user from the protections table.
@@ -539,18 +534,6 @@ function userprotect_admin() {
     '#description' => t('If selected, all newly created users will automatically be protected and assigned the default protections above.'),
     '#default_value' => variable_get('userprotect_autoprotect', FALSE),
   );
-  // A checkbox to enable the UID 1 bypass functionality (enabled by default).
-  $form['userprotect_uid_1_bypass'] = array('#type' => 'checkbox',
-    '#title' => t('Allow root user bypass'),
-    '#description' => t('If selected, the root user (uid 1) will be allowed to bypass all protections provided by this module.'),
-    '#default_value' => variable_get('userprotect_uid_1_bypass', TRUE),
-  );
-  // A checkbox to enable the 'administer users' bypass functionality (disabled by default).
-  $form['userprotect_admin_user_bypass'] = array('#type' => 'checkbox',
-    '#title' => t('Allow \'administer users\' bypass'),
-    '#description' => t('If selected, users with the \'administer users\' permission will be allowed to bypass all protections provided by this module.'),
-    '#default_value' => variable_get('userprotect_admin_user_bypass', FALSE),
-  );
 
   /**
    * Role protection table.
@@ -565,10 +548,6 @@ function userprotect_admin() {
   // Grab all roles but the anonymous role, and grab the current default settings.
   $roles = db_query('SELECT * FROM {role} WHERE rid > 1 ORDER BY name');
   $protected_roles = variable_get('userprotect_role_protections', array());
-
-  // Set some initial values.
-  $delete = t('delete');
-  $options = array();
 
   // This is a complete list of protections for reference.
   $protections = array_keys(userprotect_protection_defaults());
@@ -590,6 +569,21 @@ function userprotect_admin() {
       );
     }
   }
+
+    // Checkboxes to enable the UID 1 bypass functionality (enabled by default).
+  $form['userprotect_uid_1_bypass'] = array('#type' => 'checkboxes',
+    '#title' => t('Root user bypass'),
+    '#description' => t('Select which protections the root user (uid 1) will be allowed to bypass.'),
+    '#options' => $options,
+    '#default_value' => variable_get('userprotect_uid_1_bypass', array_flip(userprotect_get_protection_display())),
+  );
+  // Checkboxes to enable the 'administer users' bypass functionality (disabled by default).
+  $form['userprotect_admin_user_bypass'] = array('#type' => 'checkboxes',
+    '#title' => t('User administrator bypass'),
+    '#description' => t('Select which protections users with the \'administer users\' permission will be allowed to bypass.'),
+    '#options' => $options,
+    '#default_value' => variable_get('userprotect_admin_user_bypass', array_flip(userprotect_get_protection_display())),
+  );
 
   $form['submit'] = array('#type' => 'submit',
     '#value' => t('Submit'),
@@ -674,7 +668,7 @@ function userprotect_user_admin_account_validate($form_id, $form_vals, $form) {
       case 'unblock':
         // Check to see if any of the user's roles are protected from status changes,
         // then check to see if the user is protected.
-        if (userprotect_get_role_protection($account->roles, 'up_status') || userprotect_get_user_protection($uid, 'up_status')) {
+        if ((userprotect_get_role_protection($account->roles, 'up_status') || userprotect_get_user_protection($uid, 'up_status')) && !userprotect_root_user_bypass('up_status') && !userprotect_admin_user_bypass('up_status')) {
           // If so, then unset the checked user so they will not be processed, and display a warning.
           form_set_value($form['accounts'][$uid], 0);
           drupal_set_message(t('%user is protected from status changes, and was not updated.', array('%user' => $account->name)), 'error');
@@ -684,7 +678,7 @@ function userprotect_user_admin_account_validate($form_id, $form_vals, $form) {
       case 'delete':
         // Check to see if any of the user's roles are protected from deletion,
         // then check to see if the user is protected.
-        if (userprotect_get_role_protection($account->roles, 'up_delete') || userprotect_get_user_protection($uid, 'up_delete')) {
+        if ((userprotect_get_role_protection($account->roles, 'up_delete') || userprotect_get_user_protection($uid, 'up_delete')) && !userprotect_root_user_bypass('up_delete') && !userprotect_admin_user_bypass('up_delete')) {
           // If so, then unset the checked user so they will not be processed, and display a warning.
           // Note that the array element has to be completely removed here in order to prevent the
           // user from being deleted, due to the nature of the mass deletion callback.
@@ -697,7 +691,7 @@ function userprotect_user_admin_account_validate($form_id, $form_vals, $form) {
       case 'remove_role':
         // Check to see if any of the user's roles are protected from status changes,
         // then check to see if the user is protected.
-        if (userprotect_get_role_protection($account->roles, 'up_roles') || userprotect_get_user_protection($uid, 'up_roles')) {
+        if ((userprotect_get_role_protection($account->roles, 'up_roles') || userprotect_get_user_protection($uid, 'up_roles')) && !userprotect_root_user_bypass('up_roles') && !userprotect_admin_user_bypass('up_roles')) {
           // If so, then unset the checked user so they will not be processed, and display a warning.
           form_set_value($form['accounts'][$uid], 0);
           drupal_set_message(t('%user is protected from role changes, and was not updated.', array('%user' => $account->name)), 'error');
@@ -753,7 +747,7 @@ function userprotect_get_protection_display() {
  * @param $account The user account object.
  * @return A text string representing the current protections.
  */
-function userprotect_display_protections($account) {
+function userprotect_display_protections($account, $create = FALSE) {
 
   // Get the protections display text.
   $display = userprotect_get_protection_display();
@@ -762,7 +756,7 @@ function userprotect_display_protections($account) {
   // For each protection, check if any of the user's roles are protected, or the user is
   // protected.
   foreach ($display as $protection => $value) {
-  	if (userprotect_get_role_protection($account->roles, $protection) || userprotect_get_user_protection($account->uid, $protection)) {
+  	if ((userprotect_get_role_protection($account->roles, $protection) || userprotect_get_user_protection($account->uid, $protection)) && ((!userprotect_root_user_bypass($protection) && !userprotect_admin_user_bypass($protection)) || $create)) {
   	  // If so, then add the protection to the text array.
   	  $protections[] = $display[$protection];
   	}
@@ -808,22 +802,28 @@ function userprotect_get_username($uid) {
 }
 
 /**
- * Checks to see if a root user can bypass protections.
+ * Checks to see if a root user can bypass a protection.
  *
  * @return TRUE if the root user can bypass, FALSE otherwise.
  */
-function userprotect_root_user_bypass() {
+function userprotect_root_user_bypass($protection) {
   global $user;
-  return variable_get('userprotect_uid_1_bypass', TRUE) && $user->uid == 1;
+
+  $bypass = variable_get('userprotect_uid_1_bypass', array_flip(userprotect_get_protection_display()));
+
+  return $user->uid == 1 && $bypass[$protection];
 }
 
 /**
- * Checks to see if users with the 'administer users' permission can bypass protections.
+ * Checks to see if users with the 'administer users' permission can bypass a protection.
  *
  * @return TRUE if the current user can bypass, FALSE otherwise.
  */
-function userprotect_admin_user_bypass() {
-  return variable_get('userprotect_admin_user_bypass', FALSE) && user_access('administer users');
+function userprotect_admin_user_bypass($protection) {
+
+  $bypass = variable_get('userprotect_admin_user_bypass', array_flip(userprotect_get_protection_display()));
+
+  return user_access('administer users') && $bypass[$protection];
 }
 
 /**
