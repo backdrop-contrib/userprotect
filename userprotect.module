@@ -89,7 +89,7 @@ entire site.
 </p>
 
 <p><strong>Important note:</strong> In order to protect a user from a deletion by
-visiting the user/X/delete directly, you <em>must</em> enable the \'delete\' protection
+visiting user/X/delete directly, you <em>must</em> enable the \'delete\' protection
 specifically.  The \'all account edits\' protection only disables the delete button
 at user/X/edit!</p>
 
@@ -119,8 +119,8 @@ protection!</p>
 
 <h4>ADDING ADMINISTRATOR BYPASS RULES:</h4>
 
-<p>One of the more powerful features of the module are the administrator bypass
-settings. Any user that has been granted the \'administer users\' permission can
+<p>One of the more powerful features of the module is administrator bypass
+Any user that has been granted the \'administer users\' permission can
 be configured to bypass any protection, either via the default administrator
 bypass settings at !protection_defaults,
 or via a per-administrator setting at !administrator_bypass.
@@ -580,7 +580,7 @@ function userprotect_up_add_validate($form) {
       }
       // Can't add a user twice
       else {
-        form_set_error('up_add', t('%user is already this list.', array('%user' => $username)));
+        form_set_error('up_add', t('%user is already on this list.', array('%user' => $username)));
       }
 
     }
@@ -632,7 +632,6 @@ function userprotect_protections_bypass_submit($form_id, $form_values) {
     elseif ($type == 'admin') {
       drupal_set_message(t('Bypass settings updated.'));
     }
-
   }
 }
 
@@ -1018,7 +1017,7 @@ function userprotect_get_user_protection($account, $protection) {
 
   // If this user hasn't been added to the result array yet, then pull their information.
   if (!isset($protections[$uid])) {
-    $result = db_query('SELECT * FROM {userprotect} WHERE uid = %d', $uid);
+    $result = db_query("SELECT * FROM {userprotect} WHERE uid = %d AND up_type = 'user'", $uid);
     if (db_num_rows($result)) {
       $protections[$uid] = db_fetch_array($result);
     }
