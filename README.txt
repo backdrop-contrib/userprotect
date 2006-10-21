@@ -122,3 +122,8 @@ logic:
      roles have the protection enabled, then prevent editing of the field.
 
   -  If not, then allow the field to be edited.
+
+Note: If a user is editing their own account, they are never protected from editing
+their own username, e-mail, or password. Administrators can still limit the ability
+of users to change their username via the role-based permission at
+administer -> user management -> access control.

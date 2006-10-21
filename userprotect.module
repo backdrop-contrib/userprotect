@@ -32,6 +32,7 @@ function userprotect_help($section) {
 		  $administrator_bypass = t('administrator bypass');
 		  $protection_defaults = t('protection defaults');
 		  $users = t('users');
+		  $access_control = t('access control');
 		  $pointer = ' -> ';
 
 		  $output = t('<p>This module provides various editing protection for users.
@@ -157,7 +158,13 @@ logic:</p>
   <li>If not, then examine all the roles for the user being edited.  If any of
   those roles have the protection enabled, then prevent editing of the field.</li>
   <li>If not, then allow the field to be edited.</li>
-</p>', array('!admin_user' => l('mass user editing operations', 'admin/user/user'), '!userprotect_settings' => l($admin . $pointer . $user_mgmt . $pointer . $userprotect, 'admin/user/userprotect/protected_users'), '!protected_users' => l($admin . $pointer . $user_mgmt . $pointer . $userprotect . $pointer . $protected_users, 'admin/user/userprotect/protected_users'), '!protected_roles' => l($admin . $pointer . $user_mgmt . $pointer . $userprotect . $pointer . $protected_roles, 'admin/user/userprotect/protected_roles'), '!administrator_bypass' => l($admin . $pointer . $user_mgmt . $pointer . $userprotect . $pointer . $administrator_bypass, 'admin/user/userprotect/administrator_bypass'), '!protection_defaults' => l($admin . $pointer . $user_mgmt . $pointer . $userprotect . $pointer . $protection_defaults, 'admin/user/userprotect/protection_defaults'), '!roleassign' => l('RoleAssign', 'http://drupal.org/project/roleassign', array('target' => 'X'), NULL, NULL, TRUE)));
+</ol>
+</p>
+
+<p><em>Note: If a user is editing their own account, they are never protected
+from editing their own username, e-mail, or password. Administrators can still
+limit the ability of users to change their username via the role-based permission
+at !access_control.</em>', array('!admin_user' => l('mass user editing operations', 'admin/user/user'), '!userprotect_settings' => l($admin . $pointer . $user_mgmt . $pointer . $userprotect, 'admin/user/userprotect/protected_users'), '!protected_users' => l($admin . $pointer . $user_mgmt . $pointer . $userprotect . $pointer . $protected_users, 'admin/user/userprotect/protected_users'), '!protected_roles' => l($admin . $pointer . $user_mgmt . $pointer . $userprotect . $pointer . $protected_roles, 'admin/user/userprotect/protected_roles'), '!administrator_bypass' => l($admin . $pointer . $user_mgmt . $pointer . $userprotect . $pointer . $administrator_bypass, 'admin/user/userprotect/administrator_bypass'), '!protection_defaults' => l($admin . $pointer . $user_mgmt . $pointer . $userprotect . $pointer . $protection_defaults, 'admin/user/userprotect/protection_defaults'), '!roleassign' => l('RoleAssign', 'http://drupal.org/project/roleassign', array('target' => 'X'), NULL, NULL, TRUE), '!access_control' => l($admin . $pointer . $user_mgmt . $pointer . $access_control, 'admin/user/access')));
 			return $output;
 	}
 }
