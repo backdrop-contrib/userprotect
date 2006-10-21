@@ -570,7 +570,7 @@ function userprotect_up_add_validate($form) {
     // If the user is valid, and they are not already being protected...
     if ($uid = db_result(db_query("SELECT uid FROM {users} WHERE name = '%s'", $username))) {
       if (!db_num_rows(db_query("SELECT uid FROM {userprotect} WHERE uid = %d AND up_type = '%s'", $uid, $type))) {
-        if ($type == 'admin' && !db_num_rows(db_query("SELECT u.uid FROM {users} u INNER JOIN {users_roles} ur ON u.uid = ur.uid LEFT JOIN {permission} p ON ur.rid = p.rid WHERE ((p.perm IS NOT NULL AND p.perm LIKE '%%administer users%%') OR u.uid = 1) AND u.uid = %d", $uid))) {
+        if ($uid != 1 && $type == 'admin' && !db_num_rows(db_query("SELECT u.uid FROM {users} u INNER JOIN {users_roles} ur ON u.uid = ur.uid LEFT JOIN {permission} p ON ur.rid = p.rid WHERE p.perm IS NOT NULL AND p.perm LIKE '%%administer users%%' AND u.uid = %d", $uid))) {
           form_set_error('up_add', t('%user does not have user administration privileges.', array('%user' => $username)));
         }
         else {
