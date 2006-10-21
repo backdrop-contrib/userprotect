@@ -21,13 +21,16 @@ function userprotect_install() {
                   up_type char(20) NOT NULL default '',
                   UNIQUE KEY uid_up_type (uid, up_type)
                 ) /*!40100 DEFAULT CHARACTER SET UTF8 */ ");
+      // Default settings
       $query2 = db_query("INSERT INTO {userprotect} VALUES (0, 0, 0, 0, 0, 0, 1, 1, 'user')");
       $query3 = db_query("INSERT INTO {userprotect} VALUES (1, 0, 0, 0, 0, 0, 1, 1, 'user')");
       $query4 = db_query("INSERT INTO {userprotect} VALUES (1, 1, 1, 1, 1, 1, 1, 1, 'admin')");
+      $query5 = db_result(db_query('SELECT perm FROM {permission} WHERE rid = 2'));
+      $query6 = db_query("UPDATE {permission} SET perm = '%s' WHERE rid = 2", $query5 .', change own e-mail, change own password');
       break;
   }
 
-  if ($query1 && $query2 && $query3  && $query4) {
+  if ($query1 && $query2 && $query3  && $query4  && $query5  && $query6) {
     drupal_set_message('The User Protect module was installed successfully.');
   }
   else {

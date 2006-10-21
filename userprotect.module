@@ -78,6 +78,9 @@ the default settings are such:</p>
   <li>The anonymous user is specifically protected from all edits.</li>
   <li>The root user is specifically protected from all edits.</li>
   <li>All role protections are disabled.</li>
+  <li>The \'change own e-mail\' and \'change own password\' permissions
+  are enabled for authenticated users in the userprotect section at
+  !access_control.
 </ul>
 
 <p>This effectively amounts to no protections.  It is suggested that you turn off
@@ -152,6 +155,10 @@ logic:</p>
   <li>If not, then if the current user is a user administrator, check if the
   default administrator bypass is enabled for the protection in question. If
   so, then stop the checks and allow editing of the field.
+  <li>If not, check if the user is editing their own account.  If so, determine
+  the protections for e-mail and password by examining the userprotect permissions
+  for \'change own e-mail\' and \'change own password\', and continue with the rest
+  of the checks below.
   <li>If not, check if the protection is set for the individual user being edited.
   If so, then stop the checks here, and prevent editing of the field (this effectively
   means that individual protections override role protections).</li>
@@ -159,12 +166,7 @@ logic:</p>
   those roles have the protection enabled, then prevent editing of the field.</li>
   <li>If not, then allow the field to be edited.</li>
 </ol>
-</p>
-
-<p><em>Note: If a user is editing their own account, they are never protected
-from editing their own username, e-mail, or password. Administrators can still
-limit the ability of users to change their username via the role-based permission
-at !access_control.</em>', array('!admin_user' => l('mass user editing operations', 'admin/user/user'), '!userprotect_settings' => l($admin . $pointer . $user_mgmt . $pointer . $userprotect, 'admin/user/userprotect/protected_users'), '!protected_users' => l($admin . $pointer . $user_mgmt . $pointer . $userprotect . $pointer . $protected_users, 'admin/user/userprotect/protected_users'), '!protected_roles' => l($admin . $pointer . $user_mgmt . $pointer . $userprotect . $pointer . $protected_roles, 'admin/user/userprotect/protected_roles'), '!administrator_bypass' => l($admin . $pointer . $user_mgmt . $pointer . $userprotect . $pointer . $administrator_bypass, 'admin/user/userprotect/administrator_bypass'), '!protection_defaults' => l($admin . $pointer . $user_mgmt . $pointer . $userprotect . $pointer . $protection_defaults, 'admin/user/userprotect/protection_defaults'), '!roleassign' => l('RoleAssign', 'http://drupal.org/project/roleassign', array('target' => 'X'), NULL, NULL, TRUE), '!access_control' => l($admin . $pointer . $user_mgmt . $pointer . $access_control, 'admin/user/access')));
+</p>', array('!admin_user' => l('mass user editing operations', 'admin/user/user'), '!userprotect_settings' => l($admin . $pointer . $user_mgmt . $pointer . $userprotect, 'admin/user/userprotect/protected_users'), '!protected_users' => l($admin . $pointer . $user_mgmt . $pointer . $userprotect . $pointer . $protected_users, 'admin/user/userprotect/protected_users'), '!protected_roles' => l($admin . $pointer . $user_mgmt . $pointer . $userprotect . $pointer . $protected_roles, 'admin/user/userprotect/protected_roles'), '!administrator_bypass' => l($admin . $pointer . $user_mgmt . $pointer . $userprotect . $pointer . $administrator_bypass, 'admin/user/userprotect/administrator_bypass'), '!protection_defaults' => l($admin . $pointer . $user_mgmt . $pointer . $userprotect . $pointer . $protection_defaults, 'admin/user/userprotect/protection_defaults'), '!roleassign' => l('RoleAssign', 'http://drupal.org/project/roleassign', array('target' => 'X'), NULL, NULL, TRUE), '!access_control' => l($admin . $pointer . $user_mgmt . $pointer . $access_control, 'admin/user/access')));
 			return $output;
 	}
 }
@@ -408,7 +410,7 @@ function userprotect_menu($may_cache) {
  * Implementation of hook_perm().
  */
 function userprotect_perm() {
-  return array('administer userprotect');
+  return array('change own e-mail', 'change own password', 'administer userprotect');
 }
 
 /**
@@ -1024,11 +1026,19 @@ function userprotect_get_user_protection($account, $protection) {
   $uid = $account->uid;
   $roles = $account->roles;
 
-  // Users should be able to edit their own username, email, and password.
-  // Admins can still limit users changing their username via the role-based
-  // permissions at admin/user/access.
+  // Users editing their own accounts have the permissions for e-mail
+  // and password determined by the role-based setting in the userprotect
+  // section at admin/user/access. This is done for consistency with the
+  // way core handles the self-editing of usernames.
   if ($uid == $user->uid && in_array($protection, array('up_name', 'up_mail', 'up_pass'))) {
-    return FALSE;
+    switch ($protection) {
+      case 'up_name':
+        return !user_access('change own username');
+      case 'up_mail':
+        return !user_access('change own e-mail');
+      case 'up_pass':
+        return !user_access('change own password');
+    }
   }
 
   // If this user hasn't been added to the result array yet, then pull their information.

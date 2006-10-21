@@ -45,6 +45,9 @@ module. When the module is initially enabled, the default settings are such:
   -- The anonymous user is specifically protected from all edits.
   -- The root user is specifically protected from all edits.
   -- All role protections are disabled.
+  -- The 'change own e-mail' and 'change own password' permissions are enabled for
+     authenticated users in the userprotect section at
+     administer -> user management -> access control.
 
 This effectively amounts to no protections. It is suggested that you turn off as
 many default administrator bypass settings as possible, and set bypass
@@ -113,6 +116,11 @@ logic:
   -- If not, then if the current user is a user administrator, check if the default
      administrator bypass is enabled for the protection in question. If so, then
      stop the checks and allow editing of the field.
+
+  --  If not, check if the user is editing their own account. If so, determine the
+      protections for e-mail and password by examining the userprotect permissions
+      for 'change own e-mail' and 'change own password', and continue with the rest
+      of the checks below.
 
   -- If not, check if the protection is set for the individual user being edited.
      If so, then stop the checks here, and prevent editing of the field (this
