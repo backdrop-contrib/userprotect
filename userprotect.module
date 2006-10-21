@@ -361,6 +361,7 @@ function userprotect_menu($may_cache) {
 		$items[] = array('path' => 'userprotect/delete',
 		  'title' => t('delete protected user'),
 		  'callback' => 'userprotect_protected_users_delete',
+		  'type' => MENU_CALLBACK,
 		  'access' => user_access('protect users'),
 		);
 	}
