@@ -1009,12 +1009,20 @@ function userprotect_check_bypass($protection, $uid = NULL) {
  * @return TRUE if the user has the specified protection, FALSE otherwise.
  */
 function userprotect_get_user_protection($account, $protection) {
+  global $user;
 
   static $protections = array();
   static $role_protections;
 
   $uid = $account->uid;
   $roles = $account->roles;
+
+  // Users should be able to edit their own username, email, and password.
+  // Admins can still limit users changing their username via the role-based
+  // permissions at admin/user/access.
+  if ($account->uid == $user->uid && in_array($protection, array('up_name', 'up_mail', 'up_pass'))) {
+    return FALSE;
+  }
 
   // If this user hasn't been added to the result array yet, then pull their information.
   if (!isset($protections[$uid])) {
