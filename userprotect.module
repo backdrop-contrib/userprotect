@@ -187,60 +187,60 @@ function userprotect_form_alter($form_id, &$form) {
     // it, then check if the user themselves is protected from it.  if either is TRUE,
     // then disable the field, and mark a fixed form value so it will be properly submitted.
     case 'user_edit':
-      $protected = FALSE;
-      if (!userprotect_check_bypass('up_name') && userprotect_get_user_protection($account, 'up_name')) {
+      $protected = array();
+      if (isset($form['account']['name']) && !userprotect_check_bypass('up_name') && userprotect_get_user_protection($account, 'up_name')) {
         // If for some reason this field has no initial value, then don't protect it.
         if ($account->name) {
           $form['account']['name']['#disabled'] = TRUE;
           $form['account']['name']['#value'] = $account->name;
-          $protected = TRUE;
+          $protected['up_name'] = TRUE;
         }
       }
-      if (!userprotect_check_bypass('up_mail') && userprotect_get_user_protection($account, 'up_mail')) {
+      if (isset($form['account']['mail']) && !userprotect_check_bypass('up_mail') && userprotect_get_user_protection($account, 'up_mail')) {
         // If for some reason this field has no initial value, then don't protect it.
         if ($account->mail) {
           $form['account']['mail']['#disabled'] = TRUE;
           $form['account']['mail']['#value'] = $account->mail;
-          $protected = TRUE;
+          $protected['up_mail'] = TRUE;
         }
       }
-      // Password is an exception, as it needs no value, plus it's expanded.
-      // Handle the disabling of it in the after build phase.
-      if (!userprotect_check_bypass('up_pass') && userprotect_get_user_protection($account, 'up_pass')) {
-        $form['account']['pass']['#after_build'] = array('userprotect_disable_password');
-        $protected = TRUE;
+      // Password is an exception, as it needs no value, Just unset it, as
+      // there's no need to display two empty boxes that are disabled.
+      if (isset($form['account']['pass']) && !userprotect_check_bypass('up_pass') && userprotect_get_user_protection($account, 'up_pass')) {
+        unset($form['account']['pass']);
+        $protected['up_pass'] = TRUE;
       }
-      if (!userprotect_check_bypass('up_status') && userprotect_get_user_protection($account, 'up_status')) {
+      if (isset($form['account']['status']) && !userprotect_check_bypass('up_status') && userprotect_get_user_protection($account, 'up_status')) {
         $form['account']['status']['#disabled'] = TRUE;
         $form['account']['status']['#value'] = $account->status;
-        $protected = TRUE;
+        $protected['up_status'] = TRUE;
+      }
+      // Special hack for RoleAssign module compatibility.
+      if (isset($form['account']['roleassign_roles'])) {
+        $roles = 'roleassign_roles';
+      }
+      else {
+        $roles = 'roles';
       }
       // Roles is a special case, since it's a tree'd item that needs values.
       // We'll handle that in a custom validation function. Also here we slip
       // the user's account info into the form so it's available to gleen the role
       // info from.
-      if (!userprotect_check_bypass('up_roles') && userprotect_get_user_protection($account, 'up_roles')) {
-        // Special case to diaable the roleassign module's roles if they exist.
-        if (isset($form['account']['roleassign_roles'])) {
-          $roles = 'roleassign_roles';
-        }
-        else {
-          $roles = 'roles';
-        }
+      if (isset($form['account'][$roles]) && !userprotect_check_bypass('up_roles') && userprotect_get_user_protection($account, 'up_roles')) {
         $form['account'][$roles]['#disabled'] = TRUE;
         $form['account'][$roles]['#account'] = $account;
         $form['account'][$roles]['#validate'] = userprotect_add_validation($form['account'][$roles]['#validate'], array('userprotect_user_edit_fields_validate' => array($account, 'roles')));
-        $protected = TRUE;
+        $protected['up_roles'] = TRUE;
       }
       // Nothing special for delete==just disable.
-      if (!userprotect_check_bypass('up_delete') && userprotect_get_user_protection($account, 'up_delete')) {
+      if (isset($form['delete']) && !userprotect_check_bypass('up_delete') && userprotect_get_user_protection($account, 'up_delete')) {
         $form['delete']['#disabled'] = TRUE;
-        $protected = TRUE;
+        $protected['up_delete'] = TRUE;
       }
       // If we're initially displaying the user's edit form, throw a message if
       // there are any protected fields, so the editor has a clue.
       if ($protected && !$_POST) {
-        drupal_set_message(userprotect_display_protections($account), 'error');
+        drupal_set_message(userprotect_display_protections($account, $protected), 'error');
       }
       break;
 
@@ -423,7 +423,8 @@ function userprotect_user($op, &$edit, &$account) {
     case 'insert':
       if (variable_get('userprotect_autoprotect', FALSE)) {
         userprotect_add_user($account->uid, 'user');
-        drupal_set_message(userprotect_display_protections($account, TRUE), 'error');
+        $protected = array_filter(variable_get('userprotect_protection_defaults', userprotect_user_protection_defaults()));
+        drupal_set_message(userprotect_display_protections($account, $protected), 'error');
       }
       break;
     // Remove a deleted user from the protections table.
@@ -896,9 +897,11 @@ function userprotect_get_protection_display() {
  * the specified user.
  *
  * @param $account The user account object.
+ * @param $protected An array of protections the current user is receiving.
+ *
  * @return A text string representing the current protections.
  */
-function userprotect_display_protections($account, $create = FALSE) {
+function userprotect_display_protections($account, $protected) {
 
   // Get the protections display text.
   $display = userprotect_get_protection_display();
@@ -906,18 +909,18 @@ function userprotect_display_protections($account, $create = FALSE) {
   $protections = array();
   // For each protection, check if any of the user's roles are protected, or the user is
   // protected.
-  foreach ($display as $protection => $value) {
-  	if ((!userprotect_check_bypass($protection) || $create) && userprotect_get_user_protection($account, $protection)) {
-  	  // If so, then add the protection to the text array.
-  	  $protections[] = $display[$protection];
-  	}
+  foreach ($protected as $protection => $value) {
+  	$protections[] = $display[$protection];
   }
   // No protections enabled.
   if (!count($protections)) {
-    $protections[] = t('No protections currently enabled.');
+    $output = '';
+  }
+  else {
+    $output = t('%user has been protected from the following editing operations: !operations', array('%user' => $account->name, '!operations' => implode(', ', $protections)));
   }
 
-  return t('%user has been protected from the following editing operations: !operations', array('%user' => $account->name, '!operations' => implode(', ', $protections)));
+  return $output;
 }
 
 /**
