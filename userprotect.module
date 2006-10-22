@@ -240,7 +240,7 @@ function userprotect_form_alter($form_id, &$form) {
       // If we're initially displaying the user's edit form, throw a message if
       // there are any protected fields, so the editor has a clue.
       if ($protected && !$_POST) {
-        drupal_set_message(userprotect_display_protections($account, $protected), 'error');
+        drupal_set_message(userprotect_display_protections($account, $protected));
       }
       break;
 
@@ -424,7 +424,7 @@ function userprotect_user($op, &$edit, &$account) {
       if (variable_get('userprotect_autoprotect', FALSE)) {
         userprotect_add_user($account->uid, 'user');
         $protected = array_filter(variable_get('userprotect_protection_defaults', userprotect_user_protection_defaults()));
-        drupal_set_message(userprotect_display_protections($account, $protected), 'error');
+        drupal_set_message(userprotect_display_protections($account, $protected));
       }
       break;
     // Remove a deleted user from the protections table.
