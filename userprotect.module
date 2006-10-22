@@ -371,7 +371,7 @@ function userprotect_menu($may_cache) {
 		  'title' => t('Delete protected user'),
 		  'callback' => 'userprotect_protected_users_delete',
 		  'type' => MENU_CALLBACK,
-		  'access' => user_access('protect users'),
+		  'access' => user_access('administer userprotect'),
 		);
 	}
 	// Since we also have to guard against menu items being called
@@ -983,7 +983,7 @@ function userprotect_check_bypass($protection, $uid = NULL) {
   static $bypass_defaults;
 
   // If not a user admin, no checks necessary.
-  if (!user_access('administer_users')) {
+  if (!user_access('administer users')) {
     return FALSE;
   }
 
