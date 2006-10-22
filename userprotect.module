@@ -326,7 +326,7 @@ function userprotect_menu($may_cache) {
 
 		// Admin page link.
 		$items[] = array('path' => 'admin/user/userprotect',
-		  'title' => t('userprotect'),
+		  'title' => t('User Protect'),
 		  'callback' => 'drupal_get_form',
 		  'callback arguments' => array('userprotect_protected_users'),
 		  'description' => t('Protect inidividual users and/or roles from editing operations.'),
@@ -334,14 +334,14 @@ function userprotect_menu($may_cache) {
 		);
 		// Default tab.
 		$items[] = array('path' => 'admin/user/userprotect/protected_users',
-      'title' => t('protected users'),
+      'title' => t('Protected users'),
       'type' => MENU_DEFAULT_LOCAL_TASK,
       'access' => $admin,
       'weight' => 1,
     );
     // Protected roles tab.
     $items[] = array('path' => 'admin/user/userprotect/protected_roles',
-		  'title' => t('protected roles'),
+		  'title' => t('Protected roles'),
 		  'callback' => 'drupal_get_form',
 		  'callback arguments' => array('userprotect_protected_roles'),
       'type' => MENU_LOCAL_TASK,
@@ -350,7 +350,7 @@ function userprotect_menu($may_cache) {
 		);
     // Administrator ypass tab.
 		$items[] = array('path' => 'admin/user/userprotect/administrator_bypass',
-		  'title' => t('administrator bypass'),
+		  'title' => t('Administrator bypass'),
 		  'callback' => 'drupal_get_form',
 		  'callback arguments' => array('userprotect_administrator_bypass'),
       'type' => MENU_LOCAL_TASK,
@@ -359,7 +359,7 @@ function userprotect_menu($may_cache) {
 		);
 		// Default settings.
 		$items[] = array('path' => 'admin/user/userprotect/protection_defaults',
-		  'title' => t('protection defaults'),
+		  'title' => t('Protection defaults'),
 		  'callback' => 'drupal_get_form',
 		  'callback arguments' => array('userprotect_protection_defaults'),
       'type' => MENU_LOCAL_TASK,
@@ -368,7 +368,7 @@ function userprotect_menu($may_cache) {
 		);
 		// Remove a user from being protected.
 		$items[] = array('path' => 'userprotect/delete',
-		  'title' => t('delete protected user'),
+		  'title' => t('Delete protected user'),
 		  'callback' => 'userprotect_protected_users_delete',
 		  'type' => MENU_CALLBACK,
 		  'access' => user_access('protect users'),
