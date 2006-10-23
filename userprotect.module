@@ -825,6 +825,9 @@ function userprotect_user_admin_account_validate($form_id, $form_vals, $form) {
         break;
       case 'add_role':
       case 'remove_role':
+      // RoleAssign module compatibility hack.
+      case 'roleassign_add_role':
+      case 'roleassign_remove_role':
         // Check to see if any of the user's roles are protected from status changes,
         // then check to see if the user is protected.
         if (!userprotect_check_bypass('up_roles') && userprotect_get_user_protection($account, 'up_roles')) {
