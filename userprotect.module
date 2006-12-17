@@ -915,12 +915,12 @@ function userprotect_display_protections($account, $protected) {
   foreach ($protected as $protection => $value) {
   	$protections[] = $display[$protection];
   }
-  // No protections enabled.
-  if (!count($protections)) {
-    $output = '';
+  // Display if there are protections and it's an admin user.
+  if (count($protections) && user_access('administer users')) {
+    $output = t('%user has been protected from the following editing operations: !operations', array('%user' => $account->name, '!operations' => implode(', ', $protections)));
   }
   else {
-    $output = t('%user has been protected from the following editing operations: !operations', array('%user' => $account->name, '!operations' => implode(', ', $protections)));
+    $output = '';
   }
 
   return $output;
