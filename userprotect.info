@@ -1,3 +1,4 @@
 ; $Id$
-name = User Protect
-description = Allows admins to protect users from being edited or deleted, on a per-user basis.
+name = "User Protect"
+description = "Allows admins to protect users from being edited or deleted, on a per-user basis."
+version = VERSION
