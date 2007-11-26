@@ -6,70 +6,123 @@
  * Implementation of hook_install().
  */
 function userprotect_install() {
-  switch ($GLOBALS['db_type']) {
-    case 'mysql':
-    case 'mysqli':
-      $query1 = db_query("CREATE TABLE {userprotect} (
-                  uid int(10) unsigned NOT NULL default '0',
-                  up_name int(1) unsigned NOT NULL default '0',
-                  up_mail int(1) unsigned NOT NULL default '0',
-                  up_pass int(1) unsigned NOT NULL default '0',
-                  up_status int(1) unsigned NOT NULL default '0',
-                  up_roles int(1) unsigned NOT NULL default '0',
-                  up_delete int(1) unsigned NOT NULL default '0',
-                  up_edit int(1) unsigned NOT NULL default '0',
-                  up_type char(20) NOT NULL default '',
-                  UNIQUE KEY uid_up_type (uid, up_type)
-                ) /*!40100 DEFAULT CHARACTER SET UTF8 */ ");
-      break;
-    case 'pgsql':
-      $query1 = db_query("CREATE TABLE {userprotect} (
-                  uid integer NOT NULL default '0',
-                  up_name smallint NOT NULL default '0',
-                  up_mail smallint NOT NULL default '0',
-                  up_pass smallint NOT NULL default '0',
-                  up_status smallint NOT NULL default '0',
-                  up_roles smallint NOT NULL default '0',
-                  up_delete smallint NOT NULL default '0',
-                  up_edit smallint NOT NULL default '0',
-                  up_type char(20) NOT NULL default '',
-                  UNIQUE (uid, up_type)
-                );");
-      break;
-  }
-  if ($query1) {
-    // Default settings
-    $query2 = db_query("INSERT INTO {userprotect} VALUES (0, 0, 0, 0, 0, 0, 1, 1, 'user')");
-    $query3 = db_query("INSERT INTO {userprotect} VALUES (1, 0, 0, 0, 0, 0, 1, 1, 'user')");
-    $query4 = db_query("INSERT INTO {userprotect} VALUES (1, 1, 1, 1, 1, 1, 1, 1, 'admin')");
-    $query5 = db_result(db_query('SELECT perm FROM {permission} WHERE rid = 2'));
-    $query6 = db_query("UPDATE {permission} SET perm = '%s' WHERE rid = 2", $query5 .', change own e-mail, change own password');
-  }
 
-  if ($query1 && $query2 && $query3  && $query4  && $query5  && $query6) {
-    drupal_set_message('The User Protect module was installed successfully.');
+  $ret = drupal_install_schema('userprotect');
+
+  $failed = array();
+  foreach ($ret as $query) {
+    if (!$query['success']) {
+      $failed[] = $query['query'];
+    }
+  }
+  if (empty($failed)) {
+    // Default settings
+    $q1 = db_query("INSERT INTO {userprotect} VALUES (0, 0, 0, 0, 0, 0, 1, 1, 'user')");
+    $q2 = db_query("INSERT INTO {userprotect} VALUES (1, 0, 0, 0, 0, 0, 1, 1, 'user')");
+    $q3 = db_query("INSERT INTO {userprotect} VALUES (1, 1, 1, 1, 1, 1, 1, 1, 'admin')");
+    $q4 = db_result(db_query('SELECT perm FROM {permission} WHERE rid = 2'));
+    $q5 = db_query("UPDATE {permission} SET perm = '%s' WHERE rid = 2", $query5 .', change own e-mail, change own password');
+    if ($q1 && $q2 && $q3 && $q4 && $q5) {
+      drupal_set_message(t('User Protect module installed successfully.'));
+    }
+    else {
+      drupal_set_message(t('Errors occurred while inserting the default data for the User Protect module.'), 'error');
+    }
   }
   else {
-    drupal_set_message('There was an error installing the User Protect database tables.', 'error');
+    drupal_set_message(t('Table installation for the User Protect module was unsuccessful. The following queries failed: !queries', array('!queries' => theme('item_list', $failed))), 'error');
   }
+}
+
+function userprotect_schema() {
+  $schema['userprotect'] = array(
+    'description' => t('Stores information about administer protections for users.'),
+    'fields' => array(
+      'uid' => array(
+        'description' => t('User ID.'),
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'up_name' => array(
+        'type' => 'int',
+        'size' => 'small',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => t("Name protection."),
+      ),
+      'up_mail' => array(
+        'type' => 'int',
+        'size' => 'small',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => t("E-mail protection."),
+      ),
+      'up_pass' => array(
+        'type' => 'int',
+        'size' => 'small',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => t("Password protection."),
+      ),
+      'up_status' => array(
+        'type' => 'int',
+        'size' => 'small',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => t("Status protection."),
+      ),
+      'up_roles' => array(
+        'type' => 'int',
+        'size' => 'small',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => t("Role protection."),
+      ),
+      'up_delete' => array(
+        'type' => 'int',
+        'size' => 'small',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => t("Deletion protection."),
+      ),
+      'up_edit' => array(
+        'type' => 'int',
+        'size' => 'small',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => t("All edits protection."),
+      ),
+      'up_type' => array(
+        'type' => 'varchar',
+        'length' => 20,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => t('Protection type.'),
+      ),
+    ),
+    'unique keys' => array('uid_up_type' => array('uid, up_type')),
+  );
 }
 
 /**
  * Implementation of hook_uninstall().
  */
 function userprotect_uninstall() {
-  if (db_table_exists('userprotect')) {
-    $query1 = db_query('DROP TABLE {userprotect}');
-  }
-  variable_del('userprotect_protection_defaults');
-  variable_del('userprotect_autoprotect');
-  variable_del('userprotect_administrator_bypass_defaults');
-  variable_del('userprotect_role_protections');
 
-  if ($query1) {
-    drupal_set_message('The User Protect module was uninstalled successfully.');
+  // Drop tables.
+  drupal_uninstall_schema('userprotect');
+
+  // Drop variables.
+  $variables = array(
+    'userprotect_protection_defaults',
+    'userprotect_autoprotect',
+    'userprotect_administrator_bypass_defaults',
+    'userprotect_role_protections',
+  );
+  foreach ($variables as $variable) {
+    variable_del($variable);
   }
-  else {
-    drupal_set_message('There was an error removing the User Protect database tables.', 'error');
-  }
+
+  drupal_set_message(t('The User Protect module was uninstalled successfully.'));
 }
