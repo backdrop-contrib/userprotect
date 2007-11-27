@@ -7,8 +7,8 @@
  *
  * Returns various help texts.
  */
-function userprotect_help($section) {
-	switch ($section) {
+function userprotect_help($path, $arg) {
+	switch ($path) {
 		case 'admin/user/userprotect':
 		case 'admin/user/userprotect/protected_users':
 		  $output = t('These settings override any !protected_roles for the user in question. For more information on how to configure userprotect settings, see the !help.', array('!help' => l(t('help section'), 'admin/help/userprotect'), '!protected_roles' => l(t('role-based protections'), 'admin/user/userprotect/protected_roles')));
@@ -316,94 +316,123 @@ function userprotect_disable_password($form, $form_values) {
 /**
  * Implementation of hook_menu().
  */
-function userprotect_menu($may_cache) {
+function userprotect_menu() {
+  $items = array();
 
-	$items = array();
+  // Admin page link.
+  $items['admin/user/userprotect'] = array(
+    'title' => 'User Protect',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('userprotect_protected_users'),
+    'access callback' => 'user_access',
+    'access arguments' => array('administer userprotect'),
+    'description' => t('Protect inidividual users and/or roles from editing operations.'),
+  );
+  // Default tab.
+  $items['admin/user/userprotect/protected_users'] = array(
+    'title' => 'Protected users',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => 1,
+  );
+  // Protected roles tab.
+  $items['admin/user/userprotect/protected_roles'] = array(
+    'title' => 'Protected roles',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('userprotect_protected_roles'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 2,
+  );
+  // Administrator bypass tab.
+  $items['admin/user/userprotect/administrator_bypass'] = array(
+    'title' => 'Administrator bypass',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('userprotect_administrator_bypass'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 3,
+  );
+  // Default settings.
+  $items['admin/user/userprotect/protection_defaults'] = array(
+    'title' => 'Protection defaults',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('userprotect_protection_defaults'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 4,
+  );
+  // Remove a user from being protected.
+  $items['userprotect/delete'] = array(
+    'title' => 'Delete protected user',
+    'page callback' => 'userprotect_protected_users_delete',
+    'type' => MENU_CALLBACK,
+    'access callback' => 'user_access',
+    'access arguments' => array('administer userprotect'),
+  );
 
-	if ($may_cache) {
+  return $items;
+}
+/**
+ * Implementation of hook_menu_alter().
+ *
+ *  Since we also have to guard against menu items being called
+ *  directly from a URL, this page check is necessary.  The checks
+ *  are invoked for user/x/edit and user/x/delete, and replace user
+ *  modules's default access checks.
+ */
+function userprotect_menu_alter(&$callbacks) {
+  $callbacks['user/%user/edit']['access callback'] = 'userprotect_user_edit_access';
+  $callbacks['user/%user/edit']['access arguments'] = array(1);
+  $callbacks['user/%user/delete']['access callback'] = 'userprotect_user_delete_access';
+  $callbacks['user/%user/delete']['access arguments'] = array(1);
+}
 
-	  $admin = user_access('administer userprotect');
-
-		// Admin page link.
-		$items[] = array('path' => 'admin/user/userprotect',
-		  'title' => t('User Protect'),
-		  'callback' => 'drupal_get_form',
-		  'callback arguments' => array('userprotect_protected_users'),
-		  'description' => t('Protect inidividual users and/or roles from editing operations.'),
-		  'access' => $admin,
-		);
-		// Default tab.
-		$items[] = array('path' => 'admin/user/userprotect/protected_users',
-      'title' => t('Protected users'),
-      'type' => MENU_DEFAULT_LOCAL_TASK,
-      'access' => $admin,
-      'weight' => 1,
-    );
-    // Protected roles tab.
-    $items[] = array('path' => 'admin/user/userprotect/protected_roles',
-		  'title' => t('Protected roles'),
-		  'callback' => 'drupal_get_form',
-		  'callback arguments' => array('userprotect_protected_roles'),
-      'type' => MENU_LOCAL_TASK,
-		  'access' => $admin,
-		  'weight' => 2,
-		);
-    // Administrator ypass tab.
-		$items[] = array('path' => 'admin/user/userprotect/administrator_bypass',
-		  'title' => t('Administrator bypass'),
-		  'callback' => 'drupal_get_form',
-		  'callback arguments' => array('userprotect_administrator_bypass'),
-      'type' => MENU_LOCAL_TASK,
-		  'access' => $admin,
-		  'weight' => 3,
-		);
-		// Default settings.
-		$items[] = array('path' => 'admin/user/userprotect/protection_defaults',
-		  'title' => t('Protection defaults'),
-		  'callback' => 'drupal_get_form',
-		  'callback arguments' => array('userprotect_protection_defaults'),
-      'type' => MENU_LOCAL_TASK,
-		  'access' => $admin,
-		  'weight' => 4,
-		);
-		// Remove a user from being protected.
-		$items[] = array('path' => 'userprotect/delete',
-		  'title' => t('Delete protected user'),
-		  'callback' => 'userprotect_protected_users_delete',
-		  'type' => MENU_CALLBACK,
-		  'access' => user_access('administer userprotect'),
-		);
-	}
-	// Since we also have to guard against menu items being called
-	// directly from a URL, this page check is necessary.  The checks
-	// are invoked for user/x/edit and user/x/delete.
-	else {
-	  $uid = arg(1);
-	  if (arg(0) == 'user' && is_numeric($uid)) {
-	    $account = user_load(array('uid' => $uid));
-      switch (arg(2)) {
-        case 'edit':
-          // Check to see if the user's roles are protecting edits, or the user
-          // themselves is protected
-          if (!userprotect_check_bypass('up_edit') && userprotect_get_user_protection($account, 'up_edit')) {
-            // If so, set a message and kick 'em out.
-            drupal_set_message(t('%user is currently being protected from any edits.', array('%user' => $account->name)), 'error');
-            drupal_goto("user/$uid");
-          }
-          break;
-        // Check to see if the user's roles are protecting deletion, or the user
-        // themselves is protected
-        case 'delete':
-          if (!userprotect_check_bypass('up_delete') && userprotect_get_user_protection($account, 'up_delete')) {
-            // If so, set a message and kick 'em out.
-            drupal_set_message(t('%user is currently being protected from deletion.', array('%user' => $account->name)), 'error');
-            drupal_goto("user/$uid");
-          }
-          break;
-      }
+/**
+ * Access callback for user edit pages.
+ *
+ * This replaces user_edit_access from user.module.
+ *
+ * @param $account
+ *   An object representing the user to be edited.
+ */
+function userprotect_user_edit_access($account) {
+  global $user;
+  if ((($user->uid == $account->uid) || user_access('administer users')) && $account->uid > 0) {
+    // Check to see if the user's roles are protecting edits, or the user
+    // account itself is protected.
+    if (!userprotect_check_bypass('up_edit') && userprotect_get_user_protection($account, 'up_edit')) {
+      // If so, set a message and kick 'em out.
+      drupal_set_message(t('%user is currently being protected from any edits.', array('%user' => $account->name)), 'error');
+      return FALSE;
     }
-	}
-	return $items;
+    else {
+      return TRUE;
+    }
+  }
+  else {
+    return FALSE;
+  }
+}
+
+/**
+ * Access callback for user delete pages.
+ *
+ * This replaces the logic from user.module.
+ *
+ * @param $account
+ *   An object representing the user to be deleted.
+ */
+function userprotect_user_delete_access($account) {
+  if (user_access('administer users')) {
+    // Check to see if the user's roles are protecting deletion, or the user
+    // account itself is protected.
+    if (!userprotect_check_bypass('up_delete') && userprotect_get_user_protection($account, 'up_delete')) {
+      // If so, set a message and kick 'em out.
+      drupal_set_message(t('%user is currently being protected from deletion.', array('%user' => $account->name)), 'error');
+      return FALSE;
+    }
+    return TRUE;
+  }
+  else {
+    return FALSE;
+  }
 }
 
 /**
@@ -411,6 +440,20 @@ function userprotect_menu($may_cache) {
  */
 function userprotect_perm() {
   return array('change own e-mail', 'change own password', 'administer userprotect');
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function userprotect_theme() {
+  return array(
+    'userprotect_admin_role_table' => array(
+      'arguments' => array('form' => NULL),
+    ),
+    'userprotect_protections_bypass' => array(
+      'arguments' => array('form' => NULL),
+    ),
+  );
 }
 
 /**
@@ -531,7 +574,7 @@ function userprotect_protections_bypass($type) {
   );
 
   $form['submit'] = array('#type' => 'submit',
-    '#value' => t('Submit')
+    '#value' => t('Save')
   );
   return $form;
 }
@@ -580,8 +623,8 @@ function userprotect_up_add_validate($form) {
     $type = $form['#userprotect_type'];
     // If the user is valid, and they are not already being protected...
     if ($uid = db_result(db_query("SELECT uid FROM {users} WHERE name = '%s'", $username))) {
-      if (!db_num_rows(db_query("SELECT uid FROM {userprotect} WHERE uid = %d AND up_type = '%s'", $uid, $type))) {
-        if ($uid != 1 && $type == 'admin' && !db_num_rows(db_query("SELECT u.uid FROM {users} u INNER JOIN {users_roles} ur ON u.uid = ur.uid LEFT JOIN {permission} p ON ur.rid = p.rid WHERE p.perm IS NOT NULL AND p.perm LIKE '%%administer users%%' AND u.uid = %d", $uid))) {
+      if (!db_fetch_array(db_query("SELECT uid FROM {userprotect} WHERE uid = %d AND up_type = '%s'", $uid, $type))) {
+        if ($uid != 1 && $type == 'admin' && !db_fetch_array(db_query("SELECT u.uid FROM {users} u INNER JOIN {users_roles} ur ON u.uid = ur.uid LEFT JOIN {permission} p ON ur.rid = p.rid WHERE p.perm IS NOT NULL AND p.perm LIKE '%%administer users%%' AND u.uid = %d", $uid))) {
           form_set_error('up_add', t('%user does not have user administration privileges.', array('%user' => $username)));
         }
         else {
@@ -996,8 +1039,8 @@ function userprotect_check_bypass($protection, $uid = NULL) {
   // Set the static array for the current admin.
   if (!isset($bypass[$uid])) {
     $result = db_query("SELECT * FROM {userprotect} WHERE uid = %d AND up_type = 'admin'", $uid);
-    if (db_num_rows($result)) {
-      $bypass[$uid] = db_fetch_array($result);
+    if ($admin_array = db_fetch_array($result)) {
+      $bypass[$uid] = $admin_array;
     }
   }
 
@@ -1050,8 +1093,8 @@ function userprotect_get_user_protection($account, $protection) {
   // If this user hasn't been added to the result array yet, then pull their information.
   if (!isset($protections[$uid])) {
     $result = db_query("SELECT * FROM {userprotect} WHERE uid = %d AND up_type = 'user'", $uid);
-    if (db_num_rows($result)) {
-      $protections[$uid] = db_fetch_array($result);
+    if ($user_array = db_fetch_array($result)) {
+      $protections[$uid] = $user_array;
     }
   }
 
