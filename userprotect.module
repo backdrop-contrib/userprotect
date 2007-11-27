@@ -672,13 +672,19 @@ function userprotect_protections_bypass_submit($form_id, $form_values) {
     // Loop through each user.
     foreach ($form_values['protection'] as $uid => $protections) {
       $updates = array();
+      $args = array();
       // Loop through the submitted user's protections, setting them enabled or
-      // disabled as appropriate for the update query.
+      // disabled as appropriate for the update query. Note: $protection is
+      // a module generated string, so it's safe.
     	foreach ($protections_values as $protection => $value) {
-        $updates[] = "$protection = ". ($protections[$protection] ? '1' : '0');
+        $updates[] = "$protection = %d";
+        $args[] = $protections[$protection] ? 1 : 0;
     	}
+    	$args[] = $uid;
+    	$args[] = $type;
+
     	// Update the user's protections.
-    	db_query("UPDATE {userprotect} SET %s WHERE uid = %d AND up_type = '%s'", implode(', ', $updates), $uid, $type);
+    	db_query("UPDATE {userprotect} SET ". implode(', ', $updates) ." WHERE uid = %d AND up_type = '%s'", $args);
     }
     if ($type == 'user') {
       drupal_set_message(t('Protection settings updated.'));
