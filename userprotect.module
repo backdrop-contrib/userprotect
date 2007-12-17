@@ -177,7 +177,7 @@ logic:</p>
  * @param $form_id The form ID.
  * @param $form The form.
  */
-function userprotect_form_alter($form_id, &$form) {
+function userprotect_form_alter(&$form, &$form_state, $form_id) {
 
   $account = user_load(array('uid' => arg(1)));
 
@@ -229,7 +229,9 @@ function userprotect_form_alter($form_id, &$form) {
       if (isset($form['account'][$roles]) && !userprotect_check_bypass('up_roles') && userprotect_get_user_protection($account, 'up_roles')) {
         $form['account'][$roles]['#disabled'] = TRUE;
         $form['account'][$roles]['#account'] = $account;
-        $form['account'][$roles]['#validate'] = userprotect_add_validation($form['account'][$roles]['#validate'], array('userprotect_user_edit_fields_validate' => array($account, 'roles')));
+        $form['account'][$roles]['#element_validate'] = userprotect_add_validation($form['account'][$roles]['#element_validate'], array('userprotect_user_edit_fields_validate'));
+        $form_state['userprotect']['account'] = $account;
+        $form_state['userprotect']['field'] = 'roles';
         $protected['up_roles'] = TRUE;
       }
       // Nothing special for delete==just disable.
@@ -248,7 +250,7 @@ function userprotect_form_alter($form_id, &$form) {
     // in a custom validate function.
     case 'user_admin_account':
     case 'user_multiple_delete_confirm':
-      $form['#validate'] = userprotect_add_validation($form['#validate'], array('userprotect_user_admin_account_validate' => array($form)));
+      $form['#validate'] = userprotect_add_validation($form['#validate'], array('userprotect_user_admin_account_validate'));
       break;
 
   }
@@ -277,12 +279,11 @@ function userprotect_add_validation($element, $validation) {
 
 /**
  * Custom validation function for complex field protections.
- *
- * @param $form The form being validated.
- * @param $account The user account.
- * @param $field The user field to check.
  */
-function userprotect_user_edit_fields_validate($form, $account, $field) {
+function userprotect_user_edit_fields_validate($form, &$form_state) {
+  $account = $form_state['userprotect']['account'];
+  $field = $form_state['userprotect']['field'];
+
   switch ($field) {
     case 'roles':
       // Authenticated user isn't a valid checked item.
@@ -290,27 +291,11 @@ function userprotect_user_edit_fields_validate($form, $account, $field) {
       // Add values for all role checkboxes that are valid roles for this user.
       foreach ($account->roles as $rid => $role) {
         if (isset($form[$rid])) {
-          form_set_value($form[$rid], 1);
+          form_set_value($form[$rid], 1, $form_state);
         }
       }
       break;
   }
-}
-
-/**
- * After build function to disable password fields.
- *
- * @param $form The built form.
- * @param $form_values The built form's values.
- * @return The form with the password fields marked to disable (since
- *           the #disabled property is invoked prior to after build,
- *           the disabling needs to be done manually via an attribute.
- */
-function userprotect_disable_password($form, $form_values) {
-  $form['pass1']['#attributes']['disabled'] = 'disabled';
-  $form['pass2']['#attributes']['disabled'] = 'disabled';
-
-  return $form;
 }
 
 /**
@@ -527,7 +512,8 @@ function userprotect_protections_bypass($type) {
   $form['protection']['#tree'] = TRUE;
   $form['#header'] = $header;
   $form['#protections'] = $protections;
-  $form['#base'] = 'userprotect_protections_bypass';
+  $form['#submit'] = 'userprotect_protections_bypass_submit';
+  $form['#theme'] = 'userprotect_protections_bypass';
 
   // Build the checkboxes options.
   foreach ($protections as $protection) {
@@ -565,7 +551,7 @@ function userprotect_protections_bypass($type) {
   $form['up_add'] = array('#type' => 'textfield',
     '#maxlength' => 60,
     '#autocomplete_path' => 'user/autocomplete',
-    '#validate' => array('userprotect_up_add_validate' => array()),
+    '#element_validate' => array('userprotect_up_add_validate'),
     '#userprotect_type' => $type,
   );
   $form['up_add_text'] = array('#value' => t('Add user'),);
@@ -614,10 +600,8 @@ function theme_userprotect_protections_bypass($form) {
 
 /**
  * Custom validation function for adding a user for protection.
- *
- * @param $form The textfield to validate.
  */
-function userprotect_up_add_validate($form) {
+function userprotect_up_add_validate($form, &$form_state) {
   // If a user has been submitted
   if ($username = $form['#value']) {
     $type = $form['#userprotect_type'];
@@ -629,7 +613,7 @@ function userprotect_up_add_validate($form) {
         }
         else {
           // Transform the username into a uid.
-          form_set_value($form, $uid);
+          form_set_value($form, $uid, $form_state);
         }
       }
       // Can't add a user twice
@@ -647,16 +631,13 @@ function userprotect_up_add_validate($form) {
 
 /**
  * Processes the submitted user protection form.
- *
- * @param $form_id The form ID.
- * @param $form_values The submitted form values.
  */
-function userprotect_protections_bypass_submit($form_id, $form_values) {
+function userprotect_protections_bypass_submit($form, &$form_state) {
 
-  $type = $form_values['userprotect_type'];
+  $type = $form_state['values']['userprotect_type'];
 
   // A user was added, so add them to the protected users table.
-  if ($uid = $form_values['up_add']) {
+  if ($uid = $form_state['values']['up_add']) {
     userprotect_add_user($uid, $type);
     $username = userprotect_get_username($uid);
     if ($type == 'user') {
@@ -666,11 +647,11 @@ function userprotect_protections_bypass_submit($form_id, $form_values) {
       drupal_set_message(t('%user now has bypass capabilities matching the default protections for newly protected users.', array('%user' => $username)));
     }
   }
-  if (is_array($form_values['protection'])) {
+  if (is_array($form_state['values']['protection'])) {
     // Load the defaults as a reference to all protections.
     $protections_values = userprotect_user_protection_defaults();
     // Loop through each user.
-    foreach ($form_values['protection'] as $uid => $protections) {
+    foreach ($form_state['values']['protection'] as $uid => $protections) {
       $updates = array();
       $args = array();
       // Loop through the submitted user's protections, setting them enabled or
@@ -831,16 +812,12 @@ function theme_userprotect_admin_role_table($form) {
 /**
  * Custom validation function for protecting users from the user
  * administration operations.
- *
- * @param $form_id The form ID.
- * @param $form_vals The submitted form values.
- * @param $form The form array.
  */
-function userprotect_user_admin_account_validate($form_id, $form_vals, $form) {
+function userprotect_user_admin_account_validate($form, &$form_state) {
   global $form_values;
 
   // Get the checked users, and the operation name.
-  $uids = array_filter($form_vals['accounts']);
+  $uids = array_filter($form_state['values']['accounts']);
   $operation_rid = explode('-', $form_values['operation']);
   $operation = $operation_rid[0];
 
@@ -855,7 +832,7 @@ function userprotect_user_admin_account_validate($form_id, $form_vals, $form) {
         // then check to see if the user is protected.
         if (!userprotect_check_bypass('up_status') && userprotect_get_user_protection($account, 'up_status')) {
           // If so, then unset the checked user so they will not be processed, and display a warning.
-          form_set_value($form['accounts'][$uid], 0);
+          form_set_value($form['accounts'][$uid], 0, $form_state);
           drupal_set_message(t('%user is protected from status changes, and was not updated.', array('%user' => $account->name)), 'error');
           unset($uids[$uid]);
         }
@@ -881,7 +858,7 @@ function userprotect_user_admin_account_validate($form_id, $form_vals, $form) {
         // then check to see if the user is protected.
         if (!userprotect_check_bypass('up_roles') && userprotect_get_user_protection($account, 'up_roles')) {
           // If so, then unset the checked user so they will not be processed, and display a warning.
-          form_set_value($form['accounts'][$uid], 0);
+          form_set_value($form['accounts'][$uid], 0, $form_state);
           drupal_set_message(t('%user is protected from role changes, and was not updated.', array('%user' => $account->name)), 'error');
           unset($uids[$uid]);
         }
