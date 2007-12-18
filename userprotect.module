@@ -178,14 +178,13 @@ logic:</p>
  */
 function userprotect_form_alter(&$form, &$form_state, $form_id) {
 
-  $account = user_load(array('uid' => arg(1)));
-
   switch ($form_id) {
 
     // For each of the fields, first check if any of the user's roles are protecting
     // it, then check if the user themselves is protected from it.  if either is TRUE,
     // then disable the field, and mark a fixed form value so it will be properly submitted.
     case 'user_edit':
+      $account = user_load(array('uid' => arg(1)));
       $protected = array();
       if (isset($form['account']['name']) && !userprotect_check_bypass('up_name') && userprotect_get_user_protection($account, 'up_name')) {
         // If for some reason this field has no initial value, then don't protect it.
