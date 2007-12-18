@@ -24,15 +24,14 @@ function userprotect_help($path, $arg) {
 			return $output;
 	  case 'admin/help#userprotect':
 
-		  $admin = t('administer');
-		  $user_mgmt = t('user management');
-		  $userprotect = t('userprotect');
-		  $protected_users = t('protected users');
-		  $protected_roles = t('protected roles');
-		  $administrator_bypass = t('administrator bypass');
-		  $protection_defaults = t('protection defaults');
-		  $users = t('users');
-		  $access_control = t('access control');
+		  $admin = t('Administer');
+		  $user_mgmt = t('User management');
+		  $userprotect = t('User Protect');
+		  $protected_users = t('Protected users');
+		  $protected_roles = t('Protected roles');
+		  $administrator_bypass = t('Administrator bypass');
+		  $protection_defaults = t('Protection defaults');
+		  $access_control = t('Permissions');
 		  $pointer = ' -> ';
 
 		  $output = t('<p>This module provides various editing protection for users.
@@ -512,7 +511,7 @@ function userprotect_protections_bypass($type) {
   $form['protection']['#tree'] = TRUE;
   $form['#header'] = $header;
   $form['#protections'] = $protections;
-  $form['#submit'] = 'userprotect_protections_bypass_submit';
+  $form['#submit'][] = 'userprotect_protections_bypass_submit';
   $form['#theme'] = 'userprotect_protections_bypass';
 
   // Build the checkboxes options.
@@ -713,7 +712,7 @@ function userprotect_protected_roles() {
   }
 
   // Grab all roles but the anonymous role, and grab the current default settings.
-  $roles = db_query('SELECT * FROM {role} WHERE rid > 1 ORDER BY name');
+  $roles = db_query('SELECT * FROM {role} WHERE rid > %d ORDER BY name', DRUPAL_ANONYMOUS_RID);
   $protected_roles = variable_get('userprotect_role_protections', array());
 
   // This is a complete list of protections for reference.
@@ -731,9 +730,12 @@ function userprotect_protected_roles() {
     $form['role_table']['userprotect_role_protections'][$role->rid]['name'] = array('#value' => $role->name);
     // Build protections for the row.
     foreach ($protections as $protection) {
-      $form['role_table']['userprotect_role_protections'][$role->rid][$protection] = array('#type' => 'checkbox',
-        '#default_value' => $protected_roles[$role->rid][$protection],
+      $form['role_table']['userprotect_role_protections'][$role->rid][$protection] = array(
+        '#type' => 'checkbox',
       );
+      if (isset($protected_roles[$role->rid][$protection])) {
+        $form['role_table']['userprotect_role_protections'][$role->rid][$protection]['#default_value'] = $protected_roles[$role->rid][$protection];
+      }
     }
   }
 
