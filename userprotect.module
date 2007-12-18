@@ -232,14 +232,14 @@ function userprotect_form_alter(&$form, &$form_state, $form_id) {
         $form_state['userprotect']['field'] = 'roles';
         $protected['up_roles'] = TRUE;
       }
-      // Nothing special for delete==just disable.
+      // Nothing special for delete--just disable.
       if (isset($form['delete']) && !userprotect_check_bypass('up_delete') && userprotect_get_user_protection($account, 'up_delete')) {
         $form['delete']['#disabled'] = TRUE;
         $protected['up_delete'] = TRUE;
       }
       // If we're initially displaying the user's edit form, throw a message if
       // there are any protected fields, so the editor has a clue.
-      if ($protected && !$_POST) {
+      if (!empty($protected) && !$_POST) {
         drupal_set_message(userprotect_display_protections($account, $protected));
       }
       break;
