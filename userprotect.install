@@ -20,8 +20,8 @@ function userprotect_install() {
     $q1 = db_query("INSERT INTO {userprotect} VALUES (0, 0, 0, 0, 0, 0, 1, 1, 'user')");
     $q2 = db_query("INSERT INTO {userprotect} VALUES (1, 0, 0, 0, 0, 0, 1, 1, 'user')");
     $q3 = db_query("INSERT INTO {userprotect} VALUES (1, 1, 1, 1, 1, 1, 1, 1, 'admin')");
-    $q4 = db_result(db_query('SELECT perm FROM {permission} WHERE rid = 2'));
-    $q5 = db_query("UPDATE {permission} SET perm = '%s' WHERE rid = 2", $query5 .', change own e-mail, change own password');
+    $q4 = db_result(db_query('SELECT perm FROM {permission} WHERE rid = %d', DRUPAL_AUTHENTICATED_RID));
+    $q5 = db_query("UPDATE {permission} SET perm = '%s' WHERE rid = %d", $q4 .', change own e-mail, change own password', DRUPAL_AUTHENTICATED_RID);
     if ($q1 && $q2 && $q3 && $q4 && $q5) {
       drupal_set_message(t('User Protect module installed successfully.'));
     }
@@ -94,7 +94,7 @@ function userprotect_schema() {
         'description' => t("All edits protection."),
       ),
       'up_type' => array(
-        'type' => 'varchar',
+        'type' => 'char',
         'length' => 20,
         'not null' => TRUE,
         'default' => '',
@@ -103,6 +103,8 @@ function userprotect_schema() {
     ),
     'unique keys' => array('uid_up_type' => array('uid, up_type')),
   );
+
+  return $schema;
 }
 
 /**
