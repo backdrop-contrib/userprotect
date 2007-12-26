@@ -227,7 +227,8 @@ function userprotect_form_alter(&$form, &$form_state, $form_id) {
       if (isset($form['account'][$roles]) && !userprotect_check_bypass('up_roles') && userprotect_get_user_protection($account, 'up_roles')) {
         $form['account'][$roles]['#disabled'] = TRUE;
         $form['account'][$roles]['#account'] = $account;
-        $form['account'][$roles]['#element_validate'] = userprotect_add_validation($form['account'][$roles]['#element_validate'], array('userprotect_user_edit_fields_validate'));
+        $validate = isset($form['account'][$roles]['#element_validate']) ? $form['account'][$roles]['#element_validate'] : NULL;
+        $form['account'][$roles]['#element_validate'] = userprotect_add_validation($validate, array('userprotect_user_edit_fields_validate'));
         $form_state['userprotect']['account'] = $account;
         $form_state['userprotect']['field'] = 'roles';
         $protected['up_roles'] = TRUE;
@@ -248,7 +249,8 @@ function userprotect_form_alter(&$form, &$form_state, $form_id) {
     // in a custom validate function.
     case 'user_admin_account':
     case 'user_multiple_delete_confirm':
-      $form['#validate'] = userprotect_add_validation($form['#validate'], array('userprotect_user_admin_account_validate'));
+      $validate = isset($form['#validate']) ? $form['#validate'] : NULL;
+      $form['#validate'] = userprotect_add_validation($validate, array('userprotect_user_admin_account_validate'));
       break;
 
   }
