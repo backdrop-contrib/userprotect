@@ -183,7 +183,7 @@ function userprotect_form_alter(&$form, &$form_state, $form_id) {
     // For each of the fields, first check if any of the user's roles are protecting
     // it, then check if the user themselves is protected from it.  if either is TRUE,
     // then disable the field, and mark a fixed form value so it will be properly submitted.
-    case 'user_edit':
+    case 'user_profile_form':
       $account = user_load(array('uid' => arg(1)));
       $protected = array();
       if (isset($form['account']['name']) && !userprotect_check_bypass('up_name') && userprotect_get_user_protection($account, 'up_name')) {
@@ -361,8 +361,8 @@ function userprotect_menu() {
  *  modules's default access checks.
  */
 function userprotect_menu_alter(&$callbacks) {
-  $callbacks['user/%user/edit']['access callback'] = 'userprotect_user_edit_access';
-  $callbacks['user/%user/edit']['access arguments'] = array(1);
+  $callbacks['user/%user_category/edit']['access callback'] = 'userprotect_user_edit_access';
+  $callbacks['user/%user_category/edit']['access arguments'] = array(1);
   $callbacks['user/%user/delete']['access callback'] = 'userprotect_user_delete_access';
   $callbacks['user/%user/delete']['access arguments'] = array(1);
 }
@@ -1038,7 +1038,7 @@ function userprotect_check_bypass($protection, $uid = NULL) {
       $bypass_defaults = variable_get('userprotect_administrator_bypass_defaults', userprotect_administrator_bypass_defaults());
     }
 
-    return $bypass_defaults[$protection];
+    return isset($bypass_defaults[$protection]) ? $bypass_defaults[$protection] : FALSE;
   }
 
 }
