@@ -529,7 +529,7 @@ function userprotect_protections_bypass($type) {
       '#value' => $user->uid
     );
     $form[$user->uid]['name'] = array('#value' => theme('username', $user));
-    $form[$user->uid]['operations'] = array('#value' => l($delete, "userprotect/delete/$user->uid/$type"));
+    $form[$user->uid]['operations'] = array('#value' => $user->uid ? l($delete, "userprotect/delete/$user->uid/$type") : '');
     // Build the protections for the user row.
     foreach ($protections as $protection) {
     	if ($protected_user->$protection) {
@@ -681,15 +681,21 @@ function userprotect_protections_bypass_submit($form, &$form_state) {
  * @param $uid The user ID to remove.
  */
 function userprotect_protected_users_delete($uid, $type) {
-  db_query("DELETE FROM {userprotect} WHERE uid = %d AND up_type = '%s'", $uid, $type);
-  $username = userprotect_get_username($uid);
-  if ($type == 'user') {
-    drupal_set_message(t('%user is no longer protected.', array('%user' => $username)));
-    drupal_goto('admin/user/userprotect/protected_users');
+  if ($uid) {
+    db_query("DELETE FROM {userprotect} WHERE uid = %d AND up_type = '%s'", $uid, $type);
+    $username = userprotect_get_username($uid);
+    if ($type == 'user') {
+      drupal_set_message(t('%user is no longer protected.', array('%user' => $username)));
+      drupal_goto('admin/user/userprotect/protected_users');
+    }
+    elseif ($type == 'admin') {
+      drupal_set_message(t('%user is no longer enabled for bypass.', array('%user' => $username)));
+      drupal_goto('admin/user/userprotect/administrator_bypass');
+    }
   }
-  elseif ($type == 'admin') {
-    drupal_set_message(t('%user is no longer enabled for bypass.', array('%user' => $username)));
-    drupal_goto('admin/user/userprotect/administrator_bypass');
+  else {
+    drupal_set_message(t('Invalid selection.'), 'error');
+    drupal_goto('admin/user/userprotect');
   }
 }
 
