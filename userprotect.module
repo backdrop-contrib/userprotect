@@ -226,7 +226,6 @@ function userprotect_form_alter(&$form, &$form_state, $form_id) {
       // info from.
       if (isset($form['account'][$roles]) && !userprotect_check_bypass('up_roles') && userprotect_get_user_protection($account, 'up_roles')) {
         $form['account'][$roles]['#disabled'] = TRUE;
-        $form['account'][$roles]['#account'] = $account;
         $validate = isset($form['account'][$roles]['#element_validate']) ? $form['account'][$roles]['#element_validate'] : NULL;
         $form['account'][$roles]['#element_validate'] = userprotect_add_validation($validate, array('userprotect_user_edit_fields_validate'));
         $form_state['userprotect']['account'] = $account;
@@ -817,11 +816,10 @@ function theme_userprotect_admin_role_table($form) {
  * administration operations.
  */
 function userprotect_user_admin_account_validate($form, &$form_state) {
-  global $form_values;
 
   // Get the checked users, and the operation name.
   $uids = array_filter($form_state['values']['accounts']);
-  $operation_rid = explode('-', $form_values['operation']);
+  $operation_rid = explode('-', $form_state['values']['operation']);
   $operation = $operation_rid[0];
 
   // Perform the check for each submitted user.
@@ -847,7 +845,7 @@ function userprotect_user_admin_account_validate($form, &$form_state) {
           // If so, then unset the checked user so they will not be processed, and display a warning.
           // Note that the array element has to be completely removed here in order to prevent the
           // user from being deleted, due to the nature of the mass deletion callback.
-          unset($form_values['accounts'][$uid]);
+          unset($form_state['values']['accounts'][$uid]);
           drupal_set_message(t('%user is protected from deletion, and was not deleted.', array('%user' => $account->name)), 'error');
           unset($uids[$uid]);
         }
