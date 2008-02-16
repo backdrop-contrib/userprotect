@@ -382,8 +382,10 @@ function userprotect_user_edit_access($account) {
     // Check to see if the user's roles are protecting edits, or the user
     // account itself is protected.
     if (!userprotect_check_bypass('up_edit') && userprotect_get_user_protection($account, 'up_edit')) {
-      // If so, set a message and kick 'em out.
-      drupal_set_message(t('%user is currently being protected from any edits.', array('%user' => $account->name)), 'error');
+      // If so, and we're at /user/X/edit, set a message.
+      if (arg(0) == 'user' && is_numeric(arg(1)) && arg(2) == 'edit') {
+        drupal_set_message(t('%user is currently being protected from any edits.', array('%user' => $account->name)), 'error');
+      }
       return FALSE;
     }
     else {
@@ -408,8 +410,10 @@ function userprotect_user_delete_access($account) {
     // Check to see if the user's roles are protecting deletion, or the user
     // account itself is protected.
     if (!userprotect_check_bypass('up_delete') && userprotect_get_user_protection($account, 'up_delete')) {
-      // If so, set a message and kick 'em out.
-      drupal_set_message(t('%user is currently being protected from deletion.', array('%user' => $account->name)), 'error');
+      // If so, and we're at /user/X/delete, set a message.
+      if (arg(0) == 'user' && is_numeric(arg(1)) && arg(2) == 'delete') {
+        drupal_set_message(t('%user is currently being protected from deletion.', array('%user' => $account->name)), 'error');
+      }
       return FALSE;
     }
     return TRUE;
