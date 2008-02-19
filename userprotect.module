@@ -562,6 +562,10 @@ function userprotect_protections_bypass($type) {
     '#value' => $type,
   );
 
+  if ($pager = theme('pager', array(), 25, 0)) {
+    $form['pager'] = array('#value' => $pager);
+  }
+
   $form['submit'] = array('#type' => 'submit',
     '#value' => t('Save')
   );
