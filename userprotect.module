@@ -302,6 +302,7 @@ function userprotect_user_edit_fields_validate($form, &$form_state) {
  */
 function userprotect_menu() {
   $items = array();
+  $admin = array('administer userprotect');
 
   // Admin page link.
   $items['admin/user/userprotect'] = array(
@@ -309,13 +310,15 @@ function userprotect_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('userprotect_protected_users'),
     'access callback' => 'user_access',
-    'access arguments' => array('administer userprotect'),
+    'access arguments' => $admin,
     'description' => t('Protect inidividual users and/or roles from editing operations.'),
   );
   // Default tab.
   $items['admin/user/userprotect/protected_users'] = array(
     'title' => 'Protected users',
     'type' => MENU_DEFAULT_LOCAL_TASK,
+    'access callback' => 'user_access',
+    'access arguments' => $admin,
     'weight' => 1,
   );
   // Protected roles tab.
@@ -323,6 +326,8 @@ function userprotect_menu() {
     'title' => 'Protected roles',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('userprotect_protected_roles'),
+    'access callback' => 'user_access',
+    'access arguments' => $admin,
     'type' => MENU_LOCAL_TASK,
     'weight' => 2,
   );
@@ -331,6 +336,8 @@ function userprotect_menu() {
     'title' => 'Administrator bypass',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('userprotect_administrator_bypass'),
+    'access callback' => 'user_access',
+    'access arguments' => $admin,
     'type' => MENU_LOCAL_TASK,
     'weight' => 3,
   );
@@ -339,6 +346,8 @@ function userprotect_menu() {
     'title' => 'Protection defaults',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('userprotect_protection_defaults'),
+    'access callback' => 'user_access',
+    'access arguments' => $admin,
     'type' => MENU_LOCAL_TASK,
     'weight' => 4,
   );
@@ -348,7 +357,7 @@ function userprotect_menu() {
     'page callback' => 'userprotect_protected_users_delete',
     'type' => MENU_CALLBACK,
     'access callback' => 'user_access',
-    'access arguments' => array('administer userprotect'),
+    'access arguments' => $admin,
   );
 
   return $items;
