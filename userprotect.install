@@ -101,7 +101,7 @@ function userprotect_schema() {
         'description' => t('Protection type.'),
       ),
     ),
-    'unique keys' => array('uid_up_type' => array('uid, up_type')),
+    'unique keys' => array('uid_up_type' => array('uid', 'up_type')),
   );
 
   return $schema;
