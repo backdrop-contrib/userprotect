@@ -920,7 +920,7 @@ function userprotect_administrator_bypass_defaults() {
   $defaults = array();
   $protections = userprotect_user_protection_defaults();
   foreach ($protections as $protection => $value) {
-  	$defaults[] = $protection;
+  	$defaults[$protection] = $protection;
   }
 
   return $defaults;
