@@ -777,11 +777,8 @@ function userprotect_protection_defaults() {
   $current_defaults = variable_get('userprotect_protection_defaults', userprotect_user_protection_defaults());
 
   // Transform the defaults into proper checkboxes defaults.
-  foreach ($current_defaults as $name => $value) {
-    if ($value) {
-      $defaults[] = $name;
-    }
-  }
+  $defaults = array_keys(array_filter($current_defaults));
+
   // A set of checkboxes that lists the default protection settings.
   $form['userprotect_protection_defaults'] = array('#type' => 'checkboxes',
     '#title' => t('User protection defaults'),
