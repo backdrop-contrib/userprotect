@@ -1,4 +1,9 @@
 ; $Id$
+
 name = "User Protect"
 description = "Allows admins to protect users from being edited or deleted, on a per-user basis."
-core = "6.x"
+core = "7.x"
+
+files[] = userprotect.install
+files[] = userprotect.module
+
