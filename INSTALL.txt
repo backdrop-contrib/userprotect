@@ -6,8 +6,8 @@ User Protect Module -- Installation Instructions
 written by Chad Phillips: thehunmonkgroup at yahoo dot com
 ****************************************************
 
-1. Place the entire folder in your /modules directory, or a /modules directory
-    in a mulitsite folder, or in the /sites/all directory.
+1. Place the entire folder in the /modules directory in a mulitsite folder, or
+   in the /sites/all/modules directory.
 
 2. Enable the module at administer -> site building -> modules.
 

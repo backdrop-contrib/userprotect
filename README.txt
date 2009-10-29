@@ -16,17 +16,18 @@ are supported:
   -- status changes
   -- roles
   -- deletion
+  -- OpenID identities (both adding and deleting) 
   -- all edits (any accessed via user/X/edit)
 
 When a protection is enabled for a specified user (or the protection is enabled
 because the user belongs to a role that has the protection), it prevents the
 editing operation in question that anyone might try to perform on the
-user--unless an administrator who is permitted to bypass the protection is
+user -- unless an administrator who is permitted to bypass the protection is
 editing the specified user. The module will protect fields by disabling them at
 user/X/edit.
 
-User administrators my be configured to bypass specified protections, on either
-a global or per-administrator basis.
+User administrators may be configured to bypass specified protections, on
+either a global or per-administrator basis.
 
 These protections are valid both when trying to edit the user directly from
 their user/X/edit page, or using the mass user editing operations.
@@ -42,24 +43,25 @@ module. When the module is initially enabled, the default settings are such:
 
   -- User administrators bypass all protections.
   -- The root user specifically bypasses all protections.
-  -- The anonymous user is specifically protected from all edits.
-  -- The root user is specifically protected from all edits.
+  -- The anonymous user (uid 0) and root user (uid 1) are protected from all
+     edits, deletion, and OpenID operations.
   -- All role protections are disabled.
-  -- The 'change own e-mail' and 'change own password' permissions are enabled for
-     authenticated users in the userprotect section at
-     administer -> user management -> access control.
+  -- The 'change own e-mail', 'change own password', and 'change own openid'
+     permissions are enabled for authenticated users in the userprotect section
+     at administer -> user management -> access control.
 
-This effectively amounts to no protections. It is suggested that you turn off as
-many default administrator bypass settings as possible, and set bypass
+This effectively amounts to no protections. It is suggested that you turn off
+as many default administrator bypass settings as possible, and set bypass
 settings for specific user administrators--this allows you to take advantage
-of the status, roles, deletion, and edit protections in a meaningful way. Because
-of the per-user bypass/protection settings for the anonymous and root user,
-this will also begin protecting those users, without compromising the root
-user's access to the entire site.
+of the status, roles, deletion, openid and edit protections in a meaningful
+way. Because of the per-user bypass/protection settings for the anonymous and
+root user, this will also begin protecting those users, without compromising
+the root user's access to the entire site.
 
-Important note: In order to protect a user from a deletion by visiting the
-user/X/delete directly, you must enable the 'delete' protection specifically.
-The 'all account edits' protection only disables the delete button at user/X/edit!
+Important note: In order to protect a user from deletion (by visiting
+user/X/delete directly) and/or OpenID edits (by visiting user/X/openid
+directly), you must enable the 'delete' and/or 'openid' protection specifically.
+Enabling 'all account edits' does not enable these protections!
 
 Also note that this module only provides protection against actions via the
 website interface--operations that a module takes directly are not protected!
