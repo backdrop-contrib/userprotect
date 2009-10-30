@@ -163,74 +163,11 @@ logic:</p>
 }
 
 /**
- * Alters forms for user protection.
- *
- * @param $form_id The form ID.
- * @param $form The form.
+ * Implement hook_form_alter().
  */
 function userprotect_form_alter(&$form, &$form_state, $form_id) {
 
   switch ($form_id) {
-
-    // For each of the fields, first check if any of the user's roles are protecting
-    // it, then check if the user themselves is protected from it.  if either is TRUE,
-    // then disable the field, and mark a fixed form value so it will be properly submitted.
-    case 'user_profile_form':
-      $account = user_load(array('uid' => arg(1)));
-      $protected = array();
-      if (isset($form['account']['name']) && !userprotect_check_bypass('up_name') && userprotect_get_user_protection($account, 'up_name')) {
-        // If for some reason this field has no initial value, then don't protect it.
-        if ($account->name) {
-          $form['account']['name']['#disabled'] = TRUE;
-          $form['account']['name']['#value'] = $account->name;
-          $protected['up_name'] = TRUE;
-        }
-      }
-      if (isset($form['account']['mail']) && !userprotect_check_bypass('up_mail') && userprotect_get_user_protection($account, 'up_mail')) {
-        // If for some reason this field has no initial value, then don't protect it.
-        if ($account->mail) {
-          $form['account']['mail']['#disabled'] = TRUE;
-          $form['account']['mail']['#value'] = $account->mail;
-          $protected['up_mail'] = TRUE;
-        }
-      }
-      // Password is an exception, as it needs no value, Just unset it, as
-      // there's no need to display two empty boxes that are disabled.
-      if (isset($form['account']['pass']) && !userprotect_check_bypass('up_pass') && userprotect_get_user_protection($account, 'up_pass')) {
-        unset($form['account']['pass']);
-        $protected['up_pass'] = TRUE;
-      }
-      if (isset($form['account']['status']) && !userprotect_check_bypass('up_status') && userprotect_get_user_protection($account, 'up_status')) {
-        $form['account']['status']['#disabled'] = TRUE;
-        $form['account']['status']['#value'] = $account->status;
-        $protected['up_status'] = TRUE;
-      }
-      // Special hack for RoleAssign module compatibility.
-      if (isset($form['account']['roleassign_roles'])) {
-        $roles = 'roleassign_roles';
-      }
-      else {
-        $roles = 'roles';
-      }
-      // Roles is a special case, since it's a tree'd item that needs values.
-      // We'll handle that in a custom validation function. Also here we slip
-      // the user's account info into the form so it's available to gleen the role
-      // info from.
-      if (isset($form['account'][$roles]) && !userprotect_check_bypass('up_roles') && userprotect_get_user_protection($account, 'up_roles')) {
-        $form['account'][$roles]['#disabled'] = TRUE;
-        $validate = isset($form['account'][$roles]['#element_validate']) ? $form['account'][$roles]['#element_validate'] : NULL;
-        $form['account'][$roles]['#element_validate'] = userprotect_add_validation($validate, array('userprotect_user_edit_fields_validate'));
-        $form_state['userprotect']['account'] = $account;
-        $form_state['userprotect']['field'] = 'roles';
-        $protected['up_roles'] = TRUE;
-      }
-      // Nothing special for delete--just disable.
-      if (isset($form['delete']) && !userprotect_check_bypass('up_delete') && userprotect_get_user_protection($account, 'up_delete')) {
-        $form['delete']['#disabled'] = TRUE;
-        $protected['up_delete'] = TRUE;
-      }
-      userprotect_form_display_protections($account, $protected);
-      break;
 
     // These are complex cases, and are best handled by manipulating the form values
     // in a custom validate function.
@@ -241,7 +178,7 @@ function userprotect_form_alter(&$form, &$form_state, $form_id) {
       break;
     case 'openid_user_add':
     case 'openid_user_delete_form':
-      $account = user_load(array('uid' => arg(1)));
+      $account = user_load(arg(1));
       $protected = array();
       if (!userprotect_check_bypass('up_openid') && userprotect_get_user_protection($account, 'up_openid')) {
         switch ($form_id) {
@@ -263,6 +200,71 @@ function userprotect_form_alter(&$form, &$form_state, $form_id) {
       userprotect_form_display_protections($account, $protected);
       break;
   }
+}
+
+
+/**
+ * Implement hook_form_user_profile_form_alter().
+ */
+function userprotect_form_user_profile_form_alter(&$form, &$form_state) {
+
+  // For each of the fields, first check if any of the user's roles are protecting
+  // it, then check if the user themselves is protected from it.  if either is TRUE,
+  // then disable the field, and mark a fixed form value so it will be properly submitted.
+  $account = user_load(arg(1));
+  $protected = array();
+  if (isset($form['account']['name']) && !userprotect_check_bypass('up_name') && userprotect_get_user_protection($account, 'up_name')) {
+    // If for some reason this field has no initial value, then don't protect it.
+    if ($account->name) {
+      $form['account']['name']['#disabled'] = TRUE;
+      $form['account']['name']['#value'] = $account->name;
+      $protected['up_name'] = TRUE;
+    }
+  }
+  if (isset($form['account']['mail']) && !userprotect_check_bypass('up_mail') && userprotect_get_user_protection($account, 'up_mail')) {
+    // If for some reason this field has no initial value, then don't protect it.
+    if ($account->mail) {
+      $form['account']['mail']['#disabled'] = TRUE;
+      $form['account']['mail']['#value'] = $account->mail;
+      $protected['up_mail'] = TRUE;
+    }
+  }
+  // Password is an exception, as it needs no value, Just unset it, as
+  // there's no need to display two empty boxes that are disabled.
+  if (isset($form['account']['pass']) && !userprotect_check_bypass('up_pass') && userprotect_get_user_protection($account, 'up_pass')) {
+    unset($form['account']['pass']);
+    $protected['up_pass'] = TRUE;
+  }
+  if (isset($form['account']['status']) && !userprotect_check_bypass('up_status') && userprotect_get_user_protection($account, 'up_status')) {
+    $form['account']['status']['#disabled'] = TRUE;
+    $form['account']['status']['#value'] = $account->status;
+    $protected['up_status'] = TRUE;
+  }
+  // Special hack for RoleAssign module compatibility.
+  if (isset($form['account']['roleassign_roles'])) {
+    $roles = 'roleassign_roles';
+  }
+  else {
+    $roles = 'roles';
+  }
+  // Roles is a special case, since it's a tree'd item that needs values.
+  // We'll handle that in a custom validation function. Also here we slip
+  // the user's account info into the form so it's available to gleen the role
+  // info from.
+  if (isset($form['account'][$roles]) && !userprotect_check_bypass('up_roles') && userprotect_get_user_protection($account, 'up_roles')) {
+    $form['account'][$roles]['#disabled'] = TRUE;
+    $validate = isset($form['account'][$roles]['#element_validate']) ? $form['account'][$roles]['#element_validate'] : NULL;
+    $form['account'][$roles]['#element_validate'] = userprotect_add_validation($validate, array('userprotect_user_edit_fields_validate'));
+    $form_state['userprotect']['account'] = $account;
+    $form_state['userprotect']['field'] = 'roles';
+    $protected['up_roles'] = TRUE;
+  }
+  // Nothing special for delete--just disable.
+  if (isset($form['delete']) && !userprotect_check_bypass('up_delete') && userprotect_get_user_protection($account, 'up_delete')) {
+    $form['delete']['#disabled'] = TRUE;
+    $protected['up_delete'] = TRUE;
+  }
+  userprotect_form_display_protections($account, $protected);
 }
 
 /**
@@ -447,10 +449,22 @@ function userprotect_user_delete_access($account) {
  */
 function userprotect_perm() {
   return array(
-    'change own e-mail',
-    'change own password',
-    'change own openid',
-    'administer userprotect',
+    'change own e-mail' => array(
+      'title' => t('Change own e-mail'),
+      'description' => t('Allow users to edit their own e-mail address.'),
+    ),
+    'change own password' => array(
+      'title' => t('Change own password'),
+      'description' => t('Allow users to edit their own password.'),
+    ),
+    'change own openid' => array(
+      'title' => t('Change own OpenID'),
+      'description' => t('Allow users to edit their own OpenID identities.'),
+    ),
+    'administer userprotect' => array(
+      'title' => t('Administer User Protect'),
+      'description' => t('Set up access rules for user administrators for various user-related edits.'),
+    ),
   );
 }
 
@@ -460,30 +474,40 @@ function userprotect_perm() {
 function userprotect_theme() {
   return array(
     'userprotect_admin_role_table' => array(
-      'arguments' => array('form' => NULL),
+      'variables' => array(
+        'form' => NULL,
+      ),
     ),
     'userprotect_protections_bypass' => array(
-      'arguments' => array('form' => NULL),
+      'variables' => array(
+        'form' => NULL,
+      ),
     ),
   );
 }
 
 /**
- * Implementation of hook_user().
+ * Implement hook_user_insert().
  */
-function userprotect_user($op, &$edit, &$account) {
+function userprotect_user_insert(&$edit, $account) {
 
-  switch ($op) {
-    // A new user is being added.  If auto-protect is enabled, then add protection.
-    case 'insert':
-      if (variable_get('userprotect_autoprotect', FALSE)) {
-        userprotect_add_user($account->uid, 'user');
-        $protected = array_filter(variable_get('userprotect_protection_defaults', userprotect_user_protection_defaults()));
-        drupal_set_message(userprotect_display_protections($account, $protected));
-      }
-      break;
+  // A new user is being added.  If auto-protect is enabled, then add protection.
+  if (variable_get('userprotect_autoprotect', FALSE)) {
+    userprotect_add_user($account->uid, 'user');
+    $protected = array_filter(variable_get('userprotect_protection_defaults', userprotect_user_protection_defaults()));
+    drupal_set_message(userprotect_display_protections($account, $protected));
+  }
+}
+
+
+/**
+ * Implement hook_user_delete().
+ */
+function userprotect_user_delete($edit, $account, $method) {
+  switch ($method) {
     // Remove a deleted user from the protections table.
-    case 'delete':
+    case 'user_cancel_reassign':
+    case 'user_cancel_delete':
       db_query('DELETE FROM {userprotect} WHERE uid = %d', $account->uid);
       break;
   }
