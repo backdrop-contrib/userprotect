@@ -549,8 +549,26 @@ function userprotect_protections_bypass($type) {
   }
   $header[] = array('data' => t('Operations'));
 
+  $query = db_select('userprotect', 'up');
+  $query->innerJoin('users', 'u', 'up.uid = u.uid');
+  $query->condition('up.up_type', $type);
+
+  $count_query = clone $query;
+  $count_query->addExpression('COUNT(DISTINCT u.uid)');
+
+  $query = $query->extend('PagerDefault')->extend('TableSort');
+  
+  // These are all protection fields in the database.
+  $protection_fields = array_keys(userprotect_get_protection_display());
+
   // Grab the protected users.
-  $protected_users = pager_query("SELECT up.*, u.name FROM {userprotect} up INNER JOIN {users} u ON up.uid = u.uid WHERE up_type = '%s'". tablesort_sql($header), 25, 0, NULL, $type);
+  $query
+    ->fields('up', $protection_fields)
+    ->fields('u', array('name'))
+    ->limit(25)
+    ->orderByHeader($header)
+    ->setCountQuery($count_query);
+  $protected_users = $query->execute();
 
   // Set some initial values.
   $delete = t('delete');
@@ -574,10 +592,10 @@ function userprotect_protections_bypass($type) {
   }
 
   // For each protected user, build their table row.
-  while ($protected_user = db_fetch_object($protected_users)) {
+  foreach ($protected_users as $protected_user) {
     $defaults = array();
 
-    $user = user_load(array('uid' => $protected_user->uid));
+    $user = user_load($protected_user->uid);
 
     $form['user'][$user->uid]['uid'] = array(
       '#type' => 'value',
@@ -616,9 +634,7 @@ function userprotect_protections_bypass($type) {
     '#value' => $type,
   );
 
-  if ($pager = theme('pager', array(), 25, 0)) {
-    $form['pager'] = array('#markup' => $pager);
-  }
+  $form['pager'] = array('#markup' => theme('pager', array('tags' => NULL)));
 
   $form['submit'] = array(
     '#type' => 'submit',
@@ -1112,12 +1128,12 @@ function userprotect_check_bypass($protection, $uid = NULL) {
 
   // Set the static array for the current admin.
   if (!isset($bypass[$uid])) {
-    $admin_array = db_query("SELECT * FROM {userprotect} WHERE uid = :uid AND up_type = :up_type", array(
+    $result = db_query("SELECT * FROM {userprotect} WHERE uid = :uid AND up_type = :up_type", array(
       ':uid' => $uid,
       ':up_type' => 'admin',
     ));
-    if (!empty($admin_array[0])) {
-      $bypass[$uid] = $admin_array[0];
+    if ($admin_array = $result->fetchAssoc()) {
+      $bypass[$uid] = $admin_array;
     }
   }
 
@@ -1175,12 +1191,12 @@ function userprotect_get_user_protection($account, $protection) {
   // If this user hasn't been added to the result array yet, then pull their information.
   if (!isset($protections[$uid])) {
 
-    $user_array = db_query("SELECT * FROM {userprotect} WHERE uid = :uid AND up_type = :up_type", array(
+    $result = db_query("SELECT * FROM {userprotect} WHERE uid = :uid AND up_type = :up_type", array(
       ':uid' => $uid,
       ':up_type' => 'user',
     ));
-    if (!empty($user_array[0])) {
-      $protections[$uid] = $user_array[0];
+    if ($user_array = $result->fetchAssoc()) {
+      $protections[$uid] = $user_array;
     }
   }
 
