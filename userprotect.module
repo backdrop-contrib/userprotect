@@ -508,7 +508,9 @@ function userprotect_user_delete($edit, $account, $method) {
     // Remove a deleted user from the protections table.
     case 'user_cancel_reassign':
     case 'user_cancel_delete':
-      db_query('DELETE FROM {userprotect} WHERE uid = %d', $account->uid);
+      db_delete('userprotect')
+        ->condition('uid', $account->uid)
+        ->execute();
       break;
   }
 }
@@ -577,11 +579,12 @@ function userprotect_protections_bypass($type) {
 
     $user = user_load(array('uid' => $protected_user->uid));
 
-    $form['user'][$user->uid]['uid'] = array('#type' => 'value',
+    $form['user'][$user->uid]['uid'] = array(
+      '#type' => 'value',
       '#value' => $user->uid
     );
-    $form[$user->uid]['name'] = array('#value' => theme('username', $user));
-    $form[$user->uid]['operations'] = array('#value' => $user->uid ? l($delete, "userprotect/delete/$user->uid/$type") : '');
+    $form[$user->uid]['name'] = array('#markup' => theme('username', $user));
+    $form[$user->uid]['operations'] = array('#markup' => $user->uid ? l($delete, "userprotect/delete/$user->uid/$type") : '');
     // Build the protections for the user row.
     foreach ($protections as $protection) {
     	if ($protected_user->$protection) {
@@ -590,7 +593,8 @@ function userprotect_protections_bypass($type) {
     }
 
     // The checkboxes for this user.
-    $form['protection'][$user->uid] = array('#type' => 'checkboxes',
+    $form['protection'][$user->uid] = array(
+      '#type' => 'checkboxes',
   	  '#options' => $options,
   	  '#default_value' => $defaults,
   	);
@@ -599,22 +603,25 @@ function userprotect_protections_bypass($type) {
   // An autocomplete field to add new users for protection.
   // This needs a custom validation function to check the user
   // to be added.
-  $form['up_add'] = array('#type' => 'textfield',
+  $form['up_add'] = array(
+    '#type' => 'textfield',
     '#maxlength' => 60,
     '#autocomplete_path' => 'user/autocomplete',
     '#element_validate' => array('userprotect_up_add_validate'),
     '#userprotect_type' => $type,
   );
-  $form['up_add_text'] = array('#value' => t('Add user'),);
-  $form['userprotect_type'] = array('#type' => 'value',
+  $form['up_add_text'] = array('#markup' => t('Add user'),);
+  $form['userprotect_type'] = array(
+    '#type' => 'value',
     '#value' => $type,
   );
 
   if ($pager = theme('pager', array(), 25, 0)) {
-    $form['pager'] = array('#value' => $pager);
+    $form['pager'] = array('#markup' => $pager);
   }
 
-  $form['submit'] = array('#type' => 'submit',
+  $form['submit'] = array(
+    '#type' => 'submit',
     '#value' => t('Save')
   );
   return $form;
@@ -661,9 +668,17 @@ function userprotect_up_add_validate($form, &$form_state) {
   if ($username = $form['#value']) {
     $type = $form['#userprotect_type'];
     // If the user is valid, and they are not already being protected...
-    if ($uid = db_result(db_query("SELECT uid FROM {users} WHERE name = '%s'", $username))) {
-      if (!db_fetch_array(db_query("SELECT uid FROM {userprotect} WHERE uid = %d AND up_type = '%s'", $uid, $type))) {
-        if ($uid != 1 && $type == 'admin' && !db_fetch_array(db_query("SELECT u.uid FROM {users} u INNER JOIN {users_roles} ur ON u.uid = ur.uid LEFT JOIN {permission} p ON ur.rid = p.rid WHERE p.perm IS NOT NULL AND p.perm LIKE '%%administer users%%' AND u.uid = %d", $uid))) {
+    if ($uid = db_query("SELECT uid FROM {users} WHERE name = :name", array(
+      ':name' => $username,
+    ))->fetchField()) {
+      if (!db_query("SELECT uid FROM {userprotect} WHERE uid = :uid AND up_type = :up_type", array(
+        ':uid' => $uid,
+        ':up_type' => $type,
+      ))->fetchField()) {
+        if ($uid != 1 && $type == 'admin' && !db_query("SELECT u.uid FROM {users_roles} ur INNER JOIN {role_permission} rp ON ur.rid = rp.rid WHERE rp.permission = :permission AND u.uid = :uid", array(
+          ':permission' => 'administer users',
+          ':uid' => $uid,
+        ))->fetchField()) {
           form_set_error('up_add', t('%user does not have user administration privileges.', array('%user' => $username)));
         }
         else {
@@ -707,20 +722,20 @@ function userprotect_protections_bypass_submit($form, &$form_state) {
     $protections_values = userprotect_user_protection_defaults();
     // Loop through each user.
     foreach ($form_state['values']['protection'] as $uid => $protections) {
-      $updates = array();
-      $args = array();
+      $fields = array();
       // Loop through the submitted user's protections, setting them enabled or
       // disabled as appropriate for the update query. Note: $protection is
       // a module generated string, so it's safe.
     	foreach ($protections_values as $protection => $value) {
-        $updates[] = "$protection = %d";
-        $args[] = $protections[$protection] ? 1 : 0;
+        $fields[$protection] = $protections[$protection] ? 1 : 0;
     	}
-    	$args[] = $uid;
-    	$args[] = $type;
 
     	// Update the user's protections.
-    	db_query("UPDATE {userprotect} SET ". implode(', ', $updates) ." WHERE uid = %d AND up_type = '%s'", $args);
+      db_update('userprotect')
+        ->fields($fields)
+        ->condition('uid', $uid)
+        ->condition('up_type', $type)
+        ->execute();
     }
     if ($type == 'user') {
       drupal_set_message(t('Protection settings updated.'));
@@ -738,7 +753,10 @@ function userprotect_protections_bypass_submit($form, &$form_state) {
  */
 function userprotect_protected_users_delete($uid, $type) {
   if ($uid) {
-    db_query("DELETE FROM {userprotect} WHERE uid = %d AND up_type = '%s'", $uid, $type);
+    db_delete('userprotect')
+      ->condition('uid', $uid)
+      ->condition('up_type', $type)
+      ->execute();
     $username = userprotect_get_username($uid);
     if ($type == 'user') {
       drupal_set_message(t('%user is no longer protected.', array('%user' => $username)));
@@ -774,7 +792,7 @@ function userprotect_protected_roles() {
   }
 
   // Grab all roles but the anonymous role, and grab the current default settings.
-  $roles = db_query('SELECT * FROM {role} WHERE rid > %d ORDER BY name', DRUPAL_ANONYMOUS_RID);
+  $roles = user_roles(TRUE);
   $protected_roles = variable_get('userprotect_role_protections', array());
 
   // This is a complete list of protections for reference.
@@ -788,15 +806,15 @@ function userprotect_protected_roles() {
   $form['role_table']['userprotect_role_protections']['#tree'] = TRUE;
 
   // Build a row for each role.
-  while ($role = db_fetch_object($roles)) {
-    $form['role_table']['userprotect_role_protections'][$role->rid]['name'] = array('#value' => $role->name);
+  foreach ($roles as $rid => $role) {
+    $form['role_table']['userprotect_role_protections'][$rid] = array('#markup' => $role);
     // Build protections for the row.
     foreach ($protections as $protection) {
-      $form['role_table']['userprotect_role_protections'][$role->rid][$protection] = array(
+      $form['role_table']['userprotect_role_protections'][$rid][$protection] = array(
         '#type' => 'checkbox',
       );
-      if (isset($protected_roles[$role->rid][$protection])) {
-        $form['role_table']['userprotect_role_protections'][$role->rid][$protection]['#default_value'] = $protected_roles[$role->rid][$protection];
+      if (isset($protected_roles[$rid][$protection])) {
+        $form['role_table']['userprotect_role_protections'][$rid][$protection]['#default_value'] = $protected_roles[$rid][$protection];
       }
     }
   }
@@ -819,20 +837,23 @@ function userprotect_protection_defaults() {
   $defaults = array_keys(array_filter($current_defaults));
 
   // A set of checkboxes that lists the default protection settings.
-  $form['userprotect_protection_defaults'] = array('#type' => 'checkboxes',
+  $form['userprotect_protection_defaults'] = array(
+    '#type' => 'checkboxes',
     '#title' => t('User protection defaults'),
     '#description' => t('The selected protections will be assigned to users when they are first added for protection.'),
     '#options' => $options,
     '#default_value' => $defaults,
   );
   // A checkbox to enable the auto-protect functionality.
-  $form['userprotect_autoprotect'] = array('#type' => 'checkbox',
+  $form['userprotect_autoprotect'] = array(
+    '#type' => 'checkbox',
     '#title' => t('Auto-protect new users'),
     '#description' => t('If selected, all newly created users will automatically be protected and assigned the default protections above.'),
     '#default_value' => variable_get('userprotect_autoprotect', FALSE),
   );
   // A set of checkboxes that lists the default protection settings.
-  $form['userprotect_administrator_bypass_defaults'] = array('#type' => 'checkboxes',
+  $form['userprotect_administrator_bypass_defaults'] = array(
+    '#type' => 'checkboxes',
     '#title' => t('Administrator bypass defaults'),
     '#description' => t('If selected, all users with the \'administer users\' permission will be allowed to bypass the protection<br \><em>Note: this default setting is overridden by the <a href="!per_user_bypass">per-user administrator bypass settings</a>.</em>.', array('!per_user_bypass' => url('admin/config/people/userprotect/administrator_bypass'))),
     '#options' => $options,
@@ -883,7 +904,7 @@ function userprotect_user_admin_account_validate($form, &$form_state) {
 
   // Perform the check for each submitted user.
   foreach ($uids as $uid) {
-    $account = user_load(array('uid' => $uid));
+    $account = user_load($uid);
 
 	  switch ($operation) {
       case 'block':
@@ -897,7 +918,7 @@ function userprotect_user_admin_account_validate($form, &$form_state) {
           unset($uids[$uid]);
         }
         break;
-      case 'delete':
+      case 'cancel':
         // Check to see if any of the user's roles are protected from deletion,
         // then check to see if the user is protected.
         if (!userprotect_check_bypass('up_delete') && userprotect_get_user_protection($account, 'up_delete')) {
@@ -1039,30 +1060,20 @@ function userprotect_add_user($uid, $type) {
   // Grab the default protections to enable for this user.
   $protections = variable_get('userprotect_protection_defaults', userprotect_user_protection_defaults());
 
-  // Set initial values and args.
-  $names = array('%s');
-  $values = array('%d');
-  $arg_names = array('uid' => 'uid');
-  $arg_values = array($uid);
+  // Set initial fields.
+  $fields = array(
+    'uid' => $uid,
+    'up_type' => $type,
+  );
 
   // Add the protections.
   foreach ($protections as $protection => $value) {
-    $names[] = '%s';
-  	$values[] = '%d';
-  	$arg_names[$protection] = $protection;
-  	$arg_values[] = $protections[$protection] ? 1 : 0;
+    $fields[$protection] = $protections[$protection] ? 1 : 0;
   }
 
-  // Append the type.
-  $names[] = '%s';
-  $values[] = "'%s'";
-  $arg_names['up_type'] = 'up_type';
-  $arg_values[] = $type;
-
-  // Merge the args.
-  $args = ($arg_names + $arg_values);
-
-  db_query('INSERT INTO {userprotect} ('. implode(', ', $names) .') VALUES ('. implode(', ', $values) .')', $args);
+  db_insert('userprotect')
+    ->fields($fields)
+    ->execute();
 }
 
 /**
@@ -1072,7 +1083,9 @@ function userprotect_add_user($uid, $type) {
  * @return The username.
  */
 function userprotect_get_username($uid) {
-  return db_result(db_query('SELECT name FROM {users} WHERE uid = %d', $uid));
+  return db_query('SELECT name FROM {users} WHERE uid = :uid', array(
+    ':uid' => $uid,
+  ))->fetchField();
 }
 
 /**
@@ -1099,9 +1112,12 @@ function userprotect_check_bypass($protection, $uid = NULL) {
 
   // Set the static array for the current admin.
   if (!isset($bypass[$uid])) {
-    $result = db_query("SELECT * FROM {userprotect} WHERE uid = %d AND up_type = 'admin'", $uid);
-    if ($admin_array = db_fetch_array($result)) {
-      $bypass[$uid] = $admin_array;
+    $admin_array = db_query("SELECT * FROM {userprotect} WHERE uid = :uid AND up_type = :up_type", array(
+      ':uid' => $uid,
+      ':up_type' => 'admin',
+    ));
+    if (!empty($admin_array[0])) {
+      $bypass[$uid] = $admin_array[0];
     }
   }
 
@@ -1158,9 +1174,13 @@ function userprotect_get_user_protection($account, $protection) {
 
   // If this user hasn't been added to the result array yet, then pull their information.
   if (!isset($protections[$uid])) {
-    $result = db_query("SELECT * FROM {userprotect} WHERE uid = %d AND up_type = 'user'", $uid);
-    if ($user_array = db_fetch_array($result)) {
-      $protections[$uid] = $user_array;
+
+    $user_array = db_query("SELECT * FROM {userprotect} WHERE uid = :uid AND up_type = :up_type", array(
+      ':uid' => $uid,
+      ':up_type' => 'user',
+    ));
+    if (!empty($user_array[0])) {
+      $protections[$uid] = $user_array[0];
     }
   }
 
