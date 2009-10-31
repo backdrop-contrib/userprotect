@@ -32,7 +32,7 @@ either a global or per-administrator basis.
 These protections are valid both when trying to edit the user directly from
 their user/X/edit page, or using the mass user editing operations.
 
-The module also provides protection at the paths user/X/edit and user/X/delete,
+The module also provides protection at the paths user/X/edit and user/X/cancel,
 should anyone try to visit those paths directly.
 
 Note: this module is compatible with the RoleAssign module.
@@ -59,7 +59,7 @@ root user, this will also begin protecting those users, without compromising
 the root user's access to the entire site.
 
 Important note: In order to protect a user from deletion (by visiting
-user/X/delete directly) and/or OpenID edits (by visiting user/X/openid
+user/X/cancel directly) and/or OpenID edits (by visiting user/X/openid
 directly), you must enable the 'delete' and/or 'openid' protection specifically.
 Enabling 'all account edits' does not enable these protections!
 

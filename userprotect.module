@@ -3,7 +3,7 @@
 // $Id$
 
 /**
- * Implementation of hook_help().
+ * Implement hook_help().
  *
  * Returns various help texts.
  */
@@ -52,7 +52,7 @@ a global or per-administrator basis.</p>
 user/X/edit page, or using the <a href="!admin_people">mass user editing
 operations</a>.</p>
 
-<p>The module also provides protection at the paths user/X/edit and user/X/delete,
+<p>The module also provides protection at the paths user/X/edit and user/X/cancel,
 should anyone try to visit those paths directly.</p>
 
 <p><em>Note: this module is compatible with the <a href="!roleassign">
@@ -84,7 +84,7 @@ root user, this will also begin protecting those users, without compromising
 the root user\'s access to the entire site.</p>
 
 <p>Important note: In order to protect a user from deletion (by visiting
-user/X/delete directly) and/or OpenID edits (by visiting user/X/openid
+user/X/cancel directly) and/or OpenID edits (by visiting user/X/openid
 directly), you must enable the \'delete\' and/or \'openid\' protection specifically.
 Enabling \'all account edits\' does not enable these protections!</p>
 
@@ -172,7 +172,7 @@ function userprotect_form_alter(&$form, &$form_state, $form_id) {
     // These are complex cases, and are best handled by manipulating the form values
     // in a custom validate function.
     case 'user_admin_account':
-    case 'user_multiple_delete_confirm':
+    case 'user_multiple_cancel_confirm':
       $validate = isset($form['#validate']) ? $form['#validate'] : NULL;
       $form['#validate'] = userprotect_add_validation($validate, array('userprotect_user_admin_account_validate'));
       break;
@@ -310,7 +310,7 @@ function userprotect_user_edit_fields_validate($form, &$form_state) {
 }
 
 /**
- * Implementation of hook_menu().
+ * Implement hook_menu().
  */
 function userprotect_menu() {
   $items = array();
@@ -375,18 +375,18 @@ function userprotect_menu() {
   return $items;
 }
 /**
- * Implementation of hook_menu_alter().
+ * Implement hook_menu_alter().
  *
  *  Since we also have to guard against menu items being called
  *  directly from a URL, this page check is necessary.  The checks
- *  are invoked for user/x/edit and user/x/delete, and replace user
+ *  are invoked for user/x/edit and user/x/cancel, and replace user
  *  modules's default access checks.
  */
 function userprotect_menu_alter(&$callbacks) {
   $callbacks['user/%user_category/edit']['access callback'] = 'userprotect_user_edit_access';
   $callbacks['user/%user_category/edit']['access arguments'] = array(1);
-  $callbacks['user/%user/delete']['access callback'] = 'userprotect_user_delete_access';
-  $callbacks['user/%user/delete']['access arguments'] = array(1);
+  $callbacks['user/%user/cancel']['access callback'] = 'userprotect_user_cancel_access';
+  $callbacks['user/%user/cancel']['access arguments'] = array(1);
 }
 
 /**
@@ -419,21 +419,21 @@ function userprotect_user_edit_access($account) {
 }
 
 /**
- * Access callback for user delete pages.
+ * Access callback for user cancel pages.
  *
  * This replaces the logic from user.module.
  *
  * @param $account
- *   An object representing the user to be deleted.
+ *   An object representing the user to be cancelled.
  */
-function userprotect_user_delete_access($account) {
+function userprotect_user_cancel_access($account) {
   if (user_access('administer users')) {
     // Check to see if the user's roles are protecting deletion, or the user
     // account itself is protected.
     if (!userprotect_check_bypass('up_delete') && userprotect_get_user_protection($account, 'up_delete')) {
-      // If so, and we're at /user/X/delete, set a message.
-      if (arg(0) == 'user' && is_numeric(arg(1)) && arg(2) == 'delete') {
-        drupal_set_message(t('%user is currently being protected from deletion.', array('%user' => $account->name)), 'error');
+      // If so, and we're at /user/X/cancel, set a message.
+      if (arg(0) == 'user' && is_numeric(arg(1)) && arg(2) == 'cancel') {
+        drupal_set_message(t('%user is currently being protected from cancellation.', array('%user' => $account->name)), 'error');
       }
       return FALSE;
     }
@@ -445,7 +445,7 @@ function userprotect_user_delete_access($account) {
 }
 
 /**
- * Implementation of hook_perm().
+ * Implement hook_perm().
  */
 function userprotect_perm() {
   return array(
@@ -469,7 +469,7 @@ function userprotect_perm() {
 }
 
 /**
- * Implementation of hook_theme().
+ * Implement hook_theme().
  */
 function userprotect_theme() {
   return array(
@@ -501,9 +501,9 @@ function userprotect_user_insert(&$edit, $account) {
 
 
 /**
- * Implement hook_user_delete().
+ * Implement hook_user_cancel().
  */
-function userprotect_user_delete($edit, $account, $method) {
+function userprotect_user_cancel($edit, $account, $method) {
   switch ($method) {
     // Remove a deleted user from the protections table.
     case 'user_cancel_reassign':
@@ -940,9 +940,9 @@ function userprotect_user_admin_account_validate($form, &$form_state) {
         if (!userprotect_check_bypass('up_delete') && userprotect_get_user_protection($account, 'up_delete')) {
           // If so, then unset the checked user so they will not be processed, and display a warning.
           // Note that the array element has to be completely removed here in order to prevent the
-          // user from being deleted, due to the nature of the mass deletion callback.
+          // user from being cancelled, due to the nature of the mass deletion callback.
           unset($form_state['values']['accounts'][$uid]);
-          drupal_set_message(t('%user is protected from deletion, and was not deleted.', array('%user' => $account->name)), 'error');
+          drupal_set_message(t('%user is protected from cancellation, and was not cancelled.', array('%user' => $account->name)), 'error');
           unset($uids[$uid]);
         }
         break;
