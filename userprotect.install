@@ -28,7 +28,7 @@ function userprotect_install() {
       'up_pass' => 0,
       'up_status' => 0,
       'up_roles' => 0,
-      'up_delete' => 1,
+      'up_cancel' => 1,
       'up_edit' => 1,
       'up_type' => 'user',
       'up_openid' => 1,
@@ -41,7 +41,7 @@ function userprotect_install() {
       'up_pass' => 0,
       'up_status' => 0,
       'up_roles' => 0,
-      'up_delete' => 1,
+      'up_cancel' => 1,
       'up_edit' => 1,
       'up_type' => 'user',
       'up_openid' => 1,
@@ -56,7 +56,7 @@ function userprotect_install() {
       'up_pass' => 1,
       'up_status' => 1,
       'up_roles' => 1,
-      'up_delete' => 1,
+      'up_cancel' => 1,
       'up_edit' => 1,
       'up_type' => 'admin',
       'up_openid' => 1,
@@ -125,12 +125,12 @@ function userprotect_schema() {
         'default' => 0,
         'description' => 'Role protection.',
       ),
-      'up_delete' => array(
+      'up_cancel' => array(
         'type' => 'int',
         'size' => 'small',
         'not null' => TRUE,
         'default' => 0,
-        'description' => 'Deletion protection.',
+        'description' => 'Cancellation protection.',
       ),
       'up_edit' => array(
         'type' => 'int',
@@ -163,6 +163,20 @@ function userprotect_schema() {
   return $schema;
 }
 
+/**
+ * Change up_delete to up_cancel, in line with core's change from user delete
+ * to user cancel.
+ */
+function userprotect_update_7000() {
+  $spec = array(
+    'type' => 'int',
+    'size' => 'small',
+    'not null' => TRUE,
+    'default' => 0,
+    'description' => 'Cancellation protection.',
+  ),
+  db_change_field('userprotect', 'up_delete', 'up_cancel', $spec);
+}
 /**
  * Implement hook_uninstall().
  */

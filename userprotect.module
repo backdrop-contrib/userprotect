@@ -33,7 +33,7 @@ The following protections are supported:</p>
   <li>password</li>
   <li>status changes</li>
   <li>roles</li>
-  <li>deletion</li>
+  <li>cancellation</li>
   <li>OpenID identities (both adding and deleting)</li>
   <li>all edits (any accessed via user/X/edit)</li>
 </ul>
@@ -68,7 +68,7 @@ the default settings are such:</p>
   <li>User administrators bypass all protections.</li>
   <li>The root user specifically bypasses all protections.</li>
   <li>The anonymous user (uid 0) and root user (uid 1) are protected
-       from all edits, deletion, and OpenID operations.</li>
+       from all edits, cancellation, and OpenID operations.</li>
   <li>All role protections are disabled.</li>
   <li>The \'change own e-mail\', \'change own password\' and \change own openid\'
       permissions are enabled for authenticated users in the <a href="!permissions">
@@ -78,14 +78,14 @@ the default settings are such:</p>
 <p>This effectively amounts to no protections.  It is suggested that you turn off
 as many default administrator bypass settings as possible, and set bypass settings
 for specific user administrators -- this allows you to take advantage 
-of the status, roles, deletion, openid and edit protections in a meaningful
+of the status, roles, cancellation, openid and edit protections in a meaningful
 way. Because of the per-user bypass/protection settings for the anonymous and
 root user, this will also begin protecting those users, without compromising
 the root user\'s access to the entire site.</p>
 
-<p>Important note: In order to protect a user from deletion (by visiting
+<p>Important note: In order to protect a user from cancellation (by visiting
 user/X/cancel directly) and/or OpenID edits (by visiting user/X/openid
-directly), you must enable the \'delete\' and/or \'openid\' protection specifically.
+directly), you must enable the \'cancel\' and/or \'openid\' protection specifically.
 Enabling \'all account edits\' does not enable these protections!</p>
 
 <p>Also note that this module only provides protection against actions via the website
@@ -259,10 +259,10 @@ function userprotect_form_user_profile_form_alter(&$form, &$form_state) {
     $form_state['userprotect']['field'] = 'roles';
     $protected['up_roles'] = TRUE;
   }
-  // Nothing special for delete--just disable.
-  if (isset($form['delete']) && !userprotect_check_bypass('up_delete') && userprotect_get_user_protection($account, 'up_delete')) {
-    $form['delete']['#disabled'] = TRUE;
-    $protected['up_delete'] = TRUE;
+  // Nothing special for cancel--just disable.
+  if (isset($form['cancel']) && !userprotect_check_bypass('up_cancel') && userprotect_get_user_protection($account, 'up_cancel')) {
+    $form['cancel']['#disabled'] = TRUE;
+    $protected['up_cancel'] = TRUE;
   }
   userprotect_form_display_protections($account, $protected);
 }
@@ -428,9 +428,9 @@ function userprotect_user_edit_access($account) {
  */
 function userprotect_user_cancel_access($account) {
   if (user_access('administer users')) {
-    // Check to see if the user's roles are protecting deletion, or the user
+    // Check to see if the user's roles are protecting cancellation, or the user
     // account itself is protected.
-    if (!userprotect_check_bypass('up_delete') && userprotect_get_user_protection($account, 'up_delete')) {
+    if (!userprotect_check_bypass('up_cancel') && userprotect_get_user_protection($account, 'up_cancel')) {
       // If so, and we're at /user/X/cancel, set a message.
       if (arg(0) == 'user' && is_numeric(arg(1)) && arg(2) == 'cancel') {
         drupal_set_message(t('%user is currently being protected from cancellation.', array('%user' => $account->name)), 'error');
@@ -941,12 +941,12 @@ function userprotect_user_admin_account_validate($form, &$form_state) {
         }
         break;
       case 'cancel':
-        // Check to see if any of the user's roles are protected from deletion,
+        // Check to see if any of the user's roles are protected from cancellation,
         // then check to see if the user is protected.
-        if (!userprotect_check_bypass('up_delete') && userprotect_get_user_protection($account, 'up_delete')) {
+        if (!userprotect_check_bypass('up_cancel') && userprotect_get_user_protection($account, 'up_cancel')) {
           // If so, then unset the checked user so they will not be processed, and display a warning.
           // Note that the array element has to be completely removed here in order to prevent the
-          // user from being cancelled, due to the nature of the mass deletion callback.
+          // user from being cancelled, due to the nature of the mass cancellation callback.
           unset($form_state['values']['accounts'][$uid]);
           drupal_set_message(t('%user is protected from cancellation, and was not cancelled.', array('%user' => $account->name)), 'error');
           unset($uids[$uid]);
@@ -988,7 +988,7 @@ function userprotect_user_protection_defaults() {
     'up_status' => 1,
     'up_roles' => 0,
     'up_openid' => 0,
-    'up_delete' => 1,
+    'up_cancel' => 1,
     'up_edit' => 0,
   );
 }
@@ -1021,7 +1021,7 @@ function userprotect_get_protection_display() {
     'up_status' => t('status'),
     'up_roles' => t('roles'),
     'up_openid' => t('openid'),
-    'up_delete' => t('deletion'),
+    'up_cancel' => t('cancel'),
     'up_edit' => t('all account edits'),
   );
 }

@@ -15,7 +15,7 @@ are supported:
   -- password
   -- status changes
   -- roles
-  -- deletion
+  -- cancellation
   -- OpenID identities (both adding and deleting) 
   -- all edits (any accessed via user/X/edit)
 
@@ -44,7 +44,7 @@ module. When the module is initially enabled, the default settings are such:
   -- User administrators bypass all protections.
   -- The root user specifically bypasses all protections.
   -- The anonymous user (uid 0) and root user (uid 1) are protected from all
-     edits, deletion, and OpenID operations.
+     edits, cancellation, and OpenID operations.
   -- All role protections are disabled.
   -- The 'change own e-mail', 'change own password', and 'change own openid'
      permissions are enabled for authenticated users in the userprotect section
@@ -53,14 +53,14 @@ module. When the module is initially enabled, the default settings are such:
 This effectively amounts to no protections. It is suggested that you turn off
 as many default administrator bypass settings as possible, and set bypass
 settings for specific user administrators--this allows you to take advantage
-of the status, roles, deletion, openid and edit protections in a meaningful
+of the status, roles, cancellation, openid and edit protections in a meaningful
 way. Because of the per-user bypass/protection settings for the anonymous and
 root user, this will also begin protecting those users, without compromising
 the root user's access to the entire site.
 
-Important note: In order to protect a user from deletion (by visiting
+Important note: In order to protect a user from cancellation (by visiting
 user/X/cancel directly) and/or OpenID edits (by visiting user/X/openid
-directly), you must enable the 'delete' and/or 'openid' protection specifically.
+directly), you must enable the 'cancel' and/or 'openid' protection specifically.
 Enabling 'all account edits' does not enable these protections!
 
 Also note that this module only provides protection against actions via the
