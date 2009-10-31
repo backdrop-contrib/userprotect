@@ -445,9 +445,9 @@ function userprotect_user_cancel_access($account) {
 }
 
 /**
- * Implement hook_perm().
+ * Implement hook_permission().
  */
-function userprotect_perm() {
+function userprotect_permission() {
   return array(
     'change own e-mail' => array(
       'title' => t('Change own e-mail'),
@@ -601,7 +601,10 @@ function userprotect_protections_bypass($type) {
       '#type' => 'value',
       '#value' => $user->uid
     );
-    $form[$user->uid]['name'] = array('#markup' => theme('username', $user));
+    $form[$user->uid]['name'] = array(
+      '#theme' => 'username',
+      '#account' => $user,
+    );
     $form[$user->uid]['operations'] = array('#markup' => $user->uid ? l($delete, "userprotect/delete/$user->uid/$type") : '');
     // Build the protections for the user row.
     foreach ($protections as $protection) {
@@ -634,7 +637,10 @@ function userprotect_protections_bypass($type) {
     '#value' => $type,
   );
 
-  $form['pager'] = array('#markup' => theme('pager', array('tags' => NULL)));
+  $form['pager'] = array(
+    '#theme' => 'pager',
+    '#tags' => NULL,
+  );
 
   $form['submit'] = array(
     '#type' => 'submit',
@@ -671,7 +677,7 @@ function theme_userprotect_protections_bypass($form) {
 
   // Theme the table.
   $output = theme('table', $form['#header'], $rows);
-  $output .= drupal_render($form);
+  $output .= drupal_render_children($form);
 
   return $output;
 }
@@ -902,7 +908,7 @@ function theme_userprotect_admin_role_table($form) {
   $output = t('<h3>Protections by role</h3>');
   $output .= theme('table', $form['#header'], $rows);
   $output .= t('<div class="description">Setting a protection for a role will enable that protection for all users in the role.</div>');
-  $output .= drupal_render($form);
+  $output .= drupal_render_children($form);
 
   return $output;
 }
@@ -1115,8 +1121,8 @@ function userprotect_get_username($uid) {
 function userprotect_check_bypass($protection, $uid = NULL) {
   global $user;
 
-  static $bypass = array();
-  static $bypass_defaults;
+  $bypass = &drupal_static(__FUNCTION__, array());
+  $bypass_defaults = &drupal_static(__FUNCTION__ . '_defaults', array());
 
   // If not a user admin, no checks necessary.
   if (!user_access('administer users')) {
@@ -1162,8 +1168,8 @@ function userprotect_check_bypass($protection, $uid = NULL) {
 function userprotect_get_user_protection($account, $protection) {
   global $user;
 
-  static $protections = array();
-  static $role_protections;
+  $protections = &drupal_static(__FUNCTION__, array());
+  $role_protections = &drupal_static(__FUNCTION__ . '_roles', array());
 
   $uid = $account->uid;
   $roles = $account->roles;

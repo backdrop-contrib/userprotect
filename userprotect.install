@@ -3,6 +3,11 @@
 // $Id$
 
 /**
+ * @file
+ * Install, update and uninstall functions for the userprotect module.
+ */
+
+/**
  * Implement hook_update_last_removed().
  */
 function userprotect_update_last_removed() {
@@ -150,6 +155,9 @@ function userprotect_schema() {
       ),
     ),
     'unique keys' => array('uid_up_type' => array('uid', 'up_type')),
+    'foreign keys' => array(
+      'uid' => array('user' => 'uid'),
+    ),
   );
 
   return $schema;
