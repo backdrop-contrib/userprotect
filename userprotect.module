@@ -77,7 +77,7 @@ the default settings are such:</p>
 
 <p>This effectively amounts to no protections.  It is suggested that you turn off
 as many default administrator bypass settings as possible, and set bypass settings
-for specific user administrators -- this allows you to take advantage 
+for specific user administrators -- this allows you to take advantage
 of the status, roles, cancellation, openid and edit protections in a meaningful
 way. Because of the per-user bypass/protection settings for the anonymous and
 root user, this will also begin protecting those users, without compromising
@@ -116,7 +116,7 @@ protection!</p>
 
 <p>One of the more powerful features of the module is administrator bypass
 Any user that has been granted the \'administer users\' permission can
-be configured to bypass any protection, either via the 
+be configured to bypass any protection, either via the
 <a href="!protection_defaults">default administrator bypass settings</a>,
 or via a <a href="!administrator_bypass">per-administrator setting</a>.
 If a bypass is enabled for a user administrator, they will be given editing rights
@@ -474,14 +474,10 @@ function userprotect_permission() {
 function userprotect_theme() {
   return array(
     'userprotect_admin_role_table' => array(
-      'variables' => array(
-        'form' => NULL,
-      ),
+      'render element' => 'form',
     ),
     'userprotect_protections_bypass' => array(
-      'variables' => array(
-        'form' => NULL,
-      ),
+      'render element' => 'form',
     ),
   );
 }
@@ -557,14 +553,14 @@ function userprotect_protections_bypass($type) {
   $count_query->addExpression('COUNT(DISTINCT u.uid)');
 
   $query = $query->extend('PagerDefault')->extend('TableSort');
-  
+
   // These are all protection fields in the database.
   $protection_fields = array_keys(userprotect_get_protection_display());
 
   // Grab the protected users.
   $query
     ->fields('up', $protection_fields)
-    ->fields('u', array('name'))
+    ->fields('u', array('uid', 'name'))
     ->limit(25)
     ->orderByHeader($header)
     ->setCountQuery($count_query);
@@ -655,7 +651,8 @@ function userprotect_protections_bypass($type) {
  * @param $form The form to theme.
  * @return An HTML string representing the constructed form.
  */
-function theme_userprotect_protections_bypass($form) {
+function theme_userprotect_protections_bypass($variables) {
+  $form = $variables['form'];
   $rows = array();
   // Buikd the row for each user.
   foreach (element_children($form['user']) as $uid) {
@@ -676,7 +673,7 @@ function theme_userprotect_protections_bypass($form) {
   );
 
   // Theme the table.
-  $output = theme('table', $form['#header'], $rows);
+  $output = theme('table', array('header' => $form['#header'], 'rows' => $rows));
   $output .= drupal_render_children($form);
 
   return $output;
@@ -891,7 +888,8 @@ function userprotect_protection_defaults() {
  * @param $form The form for the table.
  * @return An HTML string representing the table.
  */
-function theme_userprotect_admin_role_table($form) {
+function theme_userprotect_admin_role_table($variables) {
+  $form = $variables['form'];
   $rows = array();
   // Build a row for each role
   foreach (element_children($form['userprotect_role_protections']) as $rid) {
@@ -906,7 +904,7 @@ function theme_userprotect_admin_role_table($form) {
 
   // Theme the table.
   $output = t('<h3>Protections by role</h3>');
-  $output .= theme('table', $form['#header'], $rows);
+  $output .= theme('table', array('header' => $form['#header'], 'rows' => $rows));
   $output .= t('<div class="description">Setting a protection for a role will enable that protection for all users in the role.</div>');
   $output .= drupal_render_children($form);
 

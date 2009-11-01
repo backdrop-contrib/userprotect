@@ -174,7 +174,7 @@ function userprotect_update_7000() {
     'not null' => TRUE,
     'default' => 0,
     'description' => 'Cancellation protection.',
-  ),
+  );
   db_change_field('userprotect', 'up_delete', 'up_cancel', $spec);
 }
 /**
