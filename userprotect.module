@@ -694,7 +694,7 @@ function userprotect_up_add_validate($form, &$form_state) {
         ':uid' => $uid,
         ':up_type' => $type,
       ))->fetchField()) {
-        if ($uid != 1 && $type == 'admin' && !db_query("SELECT u.uid FROM {users_roles} ur INNER JOIN {role_permission} rp ON ur.rid = rp.rid WHERE rp.permission = :permission AND u.uid = :uid", array(
+        if ($uid != 1 && $type == 'admin' && !db_query("SELECT ur.uid FROM {users_roles} ur INNER JOIN {role_permission} rp ON ur.rid = rp.rid WHERE rp.permission = :permission AND ur.uid = :uid", array(
           ':permission' => 'administer users',
           ':uid' => $uid,
         ))->fetchField()) {
@@ -826,7 +826,7 @@ function userprotect_protected_roles() {
 
   // Build a row for each role.
   foreach ($roles as $rid => $role) {
-    $form['role_table']['userprotect_role_protections'][$rid] = array('#markup' => $role);
+    $form['role_table']['userprotect_role_protections'][$rid]['name'] = array('#markup' => $role);
     // Build protections for the row.
     foreach ($protections as $protection) {
       $form['role_table']['userprotect_role_protections'][$rid][$protection] = array(
