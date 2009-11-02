@@ -383,10 +383,8 @@ function userprotect_menu() {
  *  modules's default access checks.
  */
 function userprotect_menu_alter(&$callbacks) {
-  $callbacks['user/%user_category/edit']['access callback'] = 'userprotect_user_edit_access';
-  $callbacks['user/%user_category/edit']['access arguments'] = array(1);
+  $callbacks['user/%user/edit']['access callback'] = 'userprotect_user_edit_access';
   $callbacks['user/%user/cancel']['access callback'] = 'userprotect_user_cancel_access';
-  $callbacks['user/%user/cancel']['access arguments'] = array(1);
 }
 
 /**
