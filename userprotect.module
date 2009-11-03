@@ -1112,7 +1112,7 @@ function userprotect_get_username($uid) {
 function userprotect_check_bypass($protection, $uid = NULL) {
 
   $bypass = &drupal_static(__FUNCTION__, array());
-  $bypass_defaults = &drupal_static(__FUNCTION__ . '_defaults', array());
+  $bypass_defaults = &drupal_static(__FUNCTION__ . '_defaults', NULL);
 
   // If not a user admin, no checks necessary.
   if (!user_access('administer users')) {
@@ -1158,7 +1158,7 @@ function userprotect_check_bypass($protection, $uid = NULL) {
 function userprotect_get_user_protection($account, $protection) {
 
   $protections = &drupal_static(__FUNCTION__, array());
-  $role_protections = &drupal_static(__FUNCTION__ . '_roles', array());
+  $role_protections = &drupal_static(__FUNCTION__ . '_roles', NULL);
 
   $uid = $account->uid;
   $roles = $account->roles;
