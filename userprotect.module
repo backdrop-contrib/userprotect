@@ -147,9 +147,9 @@ logic:</p>
   default administrator bypass is enabled for the protection in question. If
   so, then stop the checks and allow editing of the field.
   <li>If not, check if the user is editing their own account.  If so, determine
-  the protections for e-mail and password by examining the userprotect permissions
-  for \'change own e-mail\' and \'change own password\', and continue with the rest
-  of the checks below.
+  the protections for e-mail, password, and openid by examining the userprotect permissions
+  for \'change own e-mail\', \'change own password\' and \'change own openid\',
+  then continue with the rest of the checks below.
   <li>If not, check if the protection is set for the individual user being edited.
   If so, then stop the checks here, and prevent editing of the field (this effectively
   means that individual protections override role protections).</li>
@@ -157,7 +157,7 @@ logic:</p>
   those roles have the protection enabled, then prevent editing of the field.</li>
   <li>If not, then allow the field to be edited.</li>
 </ol>
-</p>', array('!admin_people' => url('admin/people'), '!userprotect_settings' => url('admin/config/people/userprotect/protected_users'), '!protected_users' => url('admin/config/people/userprotect/protected_users'), '!protected_roles' => url('admin/config/people/userprotect/protected_roles'), '!administrator_bypass' => url('admin/config/people/userprotect/administrator_bypass'), '!protection_defaults' => url('admin/config/people/userprotect/protection_defaults'), '!roleassign' => url('http://drupal.org/project/roleassign', array('attributes' => array('target' => 'X'), 'absolute' => TRUE)), '!permissions' => url('admin/config/people/permissions')));
+</p>', array('!admin_people' => url('admin/people'), '!userprotect_settings' => url('admin/config/people/userprotect/protected_users'), '!protected_users' => url('admin/config/people/userprotect/protected_users'), '!protected_roles' => url('admin/config/people/userprotect/protected_roles'), '!administrator_bypass' => url('admin/config/people/userprotect/administrator_bypass'), '!protection_defaults' => url('admin/config/people/userprotect/protection_defaults'), '!roleassign' => url('http://drupal.org/project/roleassign', array('attributes' => array('target' => 'X'), 'absolute' => TRUE)), '!permissions' => url('admin/config/people/permissions', array('fragment' => 'module-userprotect'))));
 			return $output;
 	}
 }
