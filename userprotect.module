@@ -350,9 +350,10 @@ function userprotect_menu() {
     'weight' => 4,
   );
   // Remove a user from being protected.
-  $items['userprotect/delete'] = array(
+  $items['userprotect/delete/%user'] = array(
     'title' => 'Delete protected user',
-    'page callback' => 'userprotect_protected_users_delete',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('userprotect_protected_users_delete_form', 2, 3),
     'type' => MENU_CALLBACK,
     'access callback' => 'user_access',
     'access arguments' => $admin,
@@ -758,30 +759,45 @@ function userprotect_protections_bypass_submit($form, &$form_state) {
 }
 
 /**
- * Menu callback.  Removes a user from being protected.
- *
- * @param $uid The user ID to remove.
+ * Menu callback. Removes a user from being protected, or removes an
+ * administrator bypass.
  */
-function userprotect_protected_users_delete($uid, $type) {
-  if ($uid) {
-    db_delete('userprotect')
-      ->condition('uid', $uid)
-      ->condition('up_type', $type)
-      ->execute();
-    $username = userprotect_get_username($uid);
-    if ($type == 'user') {
-      drupal_set_message(t('%user is no longer protected.', array('%user' => $username)));
-      drupal_goto('admin/config/people/userprotect/protected_users');
-    }
-    elseif ($type == 'admin') {
-      drupal_set_message(t('%user is no longer enabled for bypass.', array('%user' => $username)));
-      drupal_goto('admin/config/people/userprotect/administrator_bypass');
-    }
+function userprotect_protected_users_delete_form($form, &$form_state, $account, $type = 'user') {
+  if ($type == 'user') {
+    $type_display = t('protections');
+    $admin_page = 'protected_users';
   }
-  else {
-    drupal_set_message(t('Invalid selection.'), 'error');
-    drupal_goto('admin/config/people/userprotect');
+  elseif ($type == 'admin') {
+    $type_display = t('administrator bypass');
+    $admin_page = 'administrator_bypass';
   }
+  $form_state['userprotect']['account'] = $account;
+  $form_state['userprotect']['type'] = $type;
+  $form_state['userprotect']['type_display'] = $type_display;
+  $form_state['userprotect']['admin_page'] = $admin_page;
+  return confirm_form(array(), t('Are you sure you want to delete the individual !type for %user?', array('!type' => $type_display, '%user' => $account->name)), "admin/config/people/userprotect/$admin_page");
+}
+
+/**
+ * Submit function for the delete confirmation form.
+ */
+function userprotect_protected_users_delete_form_submit($form, &$form_state) {
+  $account = $form_state['userprotect']['account'];
+  $type = $form_state['userprotect']['type'];
+  $type_display = $form_state['userprotect']['type_display'];
+  $admin_page = $form_state['userprotect']['admin_page'];
+  db_delete('userprotect')
+    ->condition('uid', $account->uid)
+    ->condition('up_type', $type)
+    ->execute();
+  if ($type == 'user') {
+    drupal_set_message(t('%user is no longer protected.', array('%user' => $account->name)));
+  }
+  elseif ($type == 'admin') {
+    drupal_set_message(t('%user is no longer enabled for bypass.', array('%user' => $account->name)));
+  }
+
+  $form_state['redirect'] = "admin/config/people/userprotect/$admin_page";
 }
 
 /**
