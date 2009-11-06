@@ -309,7 +309,7 @@ function userprotect_menu() {
     'page arguments' => array('userprotect_protected_users'),
     'access callback' => 'user_access',
     'access arguments' => $admin,
-    'description' => t('Protect inidividual users and/or roles from editing operations.'),
+    'description' => 'Protect inidividual users and/or roles from editing operations.',
   );
   // Default tab.
   $items['admin/config/people/userprotect/protected_users'] = array(
