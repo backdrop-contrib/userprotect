@@ -179,7 +179,7 @@ function userprotect_form_alter(&$form, &$form_state, $form_id) {
       break;
     case 'openid_user_add':
     case 'openid_user_delete_form':
-      $account = user_load(arg(1));
+      $account = menu_get_object('user');
       $protected = array();
       if (!userprotect_check_bypass('up_openid') && userprotect_get_user_protection($account, 'up_openid')) {
         switch ($form_id) {
@@ -212,7 +212,7 @@ function userprotect_form_user_profile_form_alter(&$form, &$form_state) {
   // For each of the fields, first check if any of the user's roles are protecting
   // it, then check if the user themselves is protected from it.  if either is TRUE,
   // then disable the field, and mark a fixed form value so it will be properly submitted.
-  $account = user_load(arg(1));
+  $account = $form['#user'];
   $protected = array();
   if (isset($form['account']['name']) && !userprotect_check_bypass('up_name') && userprotect_get_user_protection($account, 'up_name')) {
     // If for some reason this field has no initial value, then don't protect it.
