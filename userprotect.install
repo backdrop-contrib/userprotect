@@ -73,6 +73,7 @@ function userprotect_install() {
       ->fields(array(
         'rid' => DRUPAL_AUTHENTICATED_RID,
         'permission' => $permission,
+        'module' => 'userprotect',
       ))->execute();
   }
 }
