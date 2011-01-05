@@ -1,9 +1,7 @@
 ; $Id$
 
-name = "User Protect"
+name = "User protect"
 description = "Allows admins to protect users from being edited or cancelled, on a per-user basis."
 core = "7.x"
-
-files[] = userprotect.install
-files[] = userprotect.module
+configure = admin/config/people/userprotect
 
