@@ -149,18 +149,19 @@ function userprotect_protections_bypass($type) {
 function theme_userprotect_protections_bypass($variables) {
   $form = $variables['form'];
   $rows = array();
-  // Buikd the row for each user.
-  foreach (element_children($form['user']) as $uid) {
-  	$row = array();
-  	$row[] = drupal_render($form[$uid]['name']);
-  	// Build the protections for the user row.
-  	foreach ($form['#protections'] as $protection) {
-  		$row[] = drupal_render($form['protection'][$uid][$protection]);
-  	}
-  	$row[] = drupal_render($form[$uid]['operations']);
-  	$rows[] = $row;
+  // Build the row for each user.
+  if (isset($form['user'])) {
+    foreach (element_children($form['user']) as $uid) {
+      $row = array();
+      $row[] = drupal_render($form[$uid]['name']);
+      // Build the protections for the user row.
+      foreach ($form['#protections'] as $protection) {
+        $row[] = drupal_render($form['protection'][$uid][$protection]);
+      }
+      $row[] = drupal_render($form[$uid]['operations']);
+      $rows[] = $row;
+    }
   }
-
   // Add the last row with the add textfield.
   $rows[] = array(
     array('data' => drupal_render($form['up_add']), 'colspan' => strval(count($form['#header']) - 1)),
@@ -231,7 +232,7 @@ function userprotect_protections_bypass_submit($form, &$form_state) {
       drupal_set_message(t('%user now has bypass capabilities matching the default protections for newly protected users.', array('%user' => $username)));
     }
   }
-  if (is_array($form_state['values']['protection'])) {
+  if (isset($form_state['values']['protection'])) {
     // Load the defaults as a reference to all protections.
     $protections_values = userprotect_user_protection_defaults();
     // Loop through each user.
