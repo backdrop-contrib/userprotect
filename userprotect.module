@@ -74,7 +74,7 @@ the default settings are such:</p>
   <li>The anonymous user (uid 0) and root user (uid 1) are protected
        from all edits, cancellation, and OpenID operations.</li>
   <li>All role protections are disabled.</li>
-  <li>The \'change own e-mail\', \'change own password\' and \change own openid\'
+  <li>The \'change own e-mail\', \'change own password\' and \'change own openid\'
       permissions are enabled for authenticated users in the <a href="!permissions">
       User protect permissions settings</a>.
 </ul>
