@@ -839,7 +839,7 @@ function userprotect_get_user_protection($account, $protection) {
     // For each role, check to see if it's enabled for that protection.
     // Return TRUE as soon as we find a protected role.
     foreach ($roles as $rid => $role) {
-      if ($role_protections[$rid][$protection]) {
+      if (!empty($role_protections[$rid][$protection])) {
         return TRUE;
       }
     }
