@@ -1,6 +1,4 @@
-
 name = "User protect"
 description = "Allows admins to protect users from being edited or cancelled, on a per-user basis."
 core = "7.x"
 configure = admin/config/people/userprotect
-

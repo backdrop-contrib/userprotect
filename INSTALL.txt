@@ -16,4 +16,3 @@ written by Chad Phillips: thehunmonkgroup at gee mail dot com
 4. Visit Administration » Configuration » People » User protect to set up the
    module.  See the help located at Administration » Help » User protect for
    details on how to properly configure the module for your needs.
-

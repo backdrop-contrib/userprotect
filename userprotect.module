@@ -1,34 +1,36 @@
 <?php
 
-
 /**
  * @file
  * Main module file for the userprotect module.
  */
 
 /**
- * Implement hook_help().
+ * Implements hook_help().
  *
  * Returns various help texts.
  */
 function userprotect_help($path, $arg) {
-	switch ($path) {
-		case 'admin/config/people/userprotect':
-		case 'admin/config/people/userprotect/protected_users':
-		  $output = t('These settings override any <a href="!protected_roles">role-based protections</a> for the user in question. For more information on how to configure userprotect settings, see the <a href="!help">help section</a>.', array('!help' => url('admin/help/userprotect'), '!protected_roles' => url('admin/config/people/userprotect/protected_roles')));
-			return $output;
-	  case 'admin/config/people/userprotect/protected_roles':
-		  $output = t('These settings add protections to any user who is in the specified role. They are overridden by any <a href="!protected_users">per-user protections</a> for the user in question. For more information on how to configure userprotect settings, see the <a href="!help">help section</a>.', array('!help' => url('admin/help/userprotect'), '!protected_users' => url('admin/config/people/userprotect/protected_users')));
-			return $output;
-		case 'admin/config/people/userprotect/administrator_bypass':
-		  $output = t('These settings add bypasses to any user who has the \'administer users\' permission. They override the <a href="!protection_defaults">defaults</a> for the user in question. For more information on how to configure userprotect settings, see the <a href="!help">help section</a>.', array('!help' => url('admin/help/userprotect'), '!protection_defaults' => url('admin/config/people/userprotect/protection_defaults')));
-			return $output;
-	  case 'admin/config/people/userprotect/protection_defaults':
-		  $output = t('Set global default protection values here. For more information on how to configure userprotect settings, see the <a href="!help">help section</a>.', array('!help' => url('admin/help/userprotect')));
-			return $output;
-	  case 'admin/help#userprotect':
+  switch ($path) {
+    case 'admin/config/people/userprotect':
+    case 'admin/config/people/userprotect/protected_users':
+      $output = t('These settings override any <a href="!protected_roles">role-based protections</a> for the user in question. For more information on how to configure userprotect settings, see the <a href="!help">help section</a>.', array('!help' => url('admin/help/userprotect'), '!protected_roles' => url('admin/config/people/userprotect/protected_roles')));
+      return $output;
 
-		  $output = t('<p>This module provides various editing protection for users.
+    case 'admin/config/people/userprotect/protected_roles':
+      $output = t('These settings add protections to any user who is in the specified role. They are overridden by any <a href="!protected_users">per-user protections</a> for the user in question. For more information on how to configure userprotect settings, see the <a href="!help">help section</a>.', array('!help' => url('admin/help/userprotect'), '!protected_users' => url('admin/config/people/userprotect/protected_users')));
+      return $output;
+
+    case 'admin/config/people/userprotect/administrator_bypass':
+      $output = t('These settings add bypasses to any user who has the \'administer users\' permission. They override the <a href="!protection_defaults">defaults</a> for the user in question. For more information on how to configure userprotect settings, see the <a href="!help">help section</a>.', array('!help' => url('admin/help/userprotect'), '!protection_defaults' => url('admin/config/people/userprotect/protection_defaults')));
+      return $output;
+
+    case 'admin/config/people/userprotect/protection_defaults':
+      $output = t('Set global default protection values here. For more information on how to configure userprotect settings, see the <a href="!help">help section</a>.', array('!help' => url('admin/help/userprotect')));
+      return $output;
+
+    case 'admin/help#userprotect':
+      $output = t('<p>This module provides various editing protection for users.
 The protections can be specific to a user, or applied to all users in a role.
 The following protections are supported:</p>
 <ul>
@@ -161,25 +163,42 @@ logic:</p>
   those roles have the protection enabled, then prevent editing of the field.</li>
   <li>If not, then allow the field to be edited.</li>
 </ol>
-</p>', array('!admin_people' => url('admin/people'), '!userprotect_settings' => url('admin/config/people/userprotect/protected_users'), '!protected_users' => url('admin/config/people/userprotect/protected_users'), '!protected_roles' => url('admin/config/people/userprotect/protected_roles'), '!administrator_bypass' => url('admin/config/people/userprotect/administrator_bypass'), '!protection_defaults' => url('admin/config/people/userprotect/protection_defaults'), '!roleassign' => url('http://drupal.org/project/roleassign', array('attributes' => array('target' => 'X'), 'absolute' => TRUE)), '!permissions' => url('admin/people/permissions', array('fragment' => 'module-userprotect'))));
-			return $output;
-	}
+</p>', array(
+        '!admin_people' => url('admin/people'),
+        '!userprotect_settings' => url('admin/config/people/userprotect/protected_users'),
+        '!protected_users' => url('admin/config/people/userprotect/protected_users'),
+        '!protected_roles' => url('admin/config/people/userprotect/protected_roles'),
+        '!administrator_bypass' => url('admin/config/people/userprotect/administrator_bypass'),
+        '!protection_defaults' => url('admin/config/people/userprotect/protection_defaults'),
+        '!roleassign' => url('http://drupal.org/project/roleassign', array(
+          'attributes' => array(
+            'target' => 'X',
+          ),
+          'absolute' => TRUE,
+        )),
+        '!permissions' => url('admin/people/permissions', array(
+          'fragment' => 'module-userprotect',
+        )),
+      ));
+      return $output;
+  }
 }
 
 /**
- * Implement hook_form_alter().
+ * Implements hook_form_alter().
  */
 function userprotect_form_alter(&$form, &$form_state, $form_id) {
 
   switch ($form_id) {
-    // These are complex cases, and are best handled by manipulating the form values
-    // in a custom validate function.
+    // These are complex cases, and are best handled by manipulating the form
+    // values in a custom validate function.
     case 'user_admin_account':
     case 'user_multiple_cancel_confirm':
       // Ensure an array.
       $form['#validate'] = isset($form['#validate']) ? $form['#validate'] : array();
       array_unshift($form['#validate'], 'userprotect_user_admin_account_validate');
       break;
+
     case 'openid_user_add':
     case 'openid_user_delete_form':
       $account = menu_get_object('user');
@@ -192,6 +211,7 @@ function userprotect_form_alter(&$form, &$form_state, $form_id) {
               $form['actions']['submit']['#disabled'] = TRUE;
             }
             break;
+
           case 'openid_user_delete_form':
             if (isset($form['actions']['submit'])) {
               $form['actions']['submit']['#disabled'] = TRUE;
@@ -206,19 +226,20 @@ function userprotect_form_alter(&$form, &$form_state, $form_id) {
   }
 }
 
-
 /**
- * Implement hook_form_user_profile_form_alter().
+ * Implements hook_form_user_profile_form_alter().
  */
 function userprotect_form_user_profile_form_alter(&$form, &$form_state) {
 
-  // For each of the fields, first check if any of the user's roles are protecting
-  // it, then check if the user themselves is protected from it.  if either is TRUE,
-  // then disable the field, and mark a fixed form value so it will be properly submitted.
+  // For each of the fields, first check if any of the user's roles are
+  // protecting it, then check if the user themselves is protected from it.
+  // If either is TRUE, then disable the field, and mark a fixed form value
+  // so it will be properly submitted.
   $account = $form['#user'];
   $protected = array();
   if (isset($form['account']['name']) && !userprotect_check_bypass('up_name') && userprotect_get_user_protection($account, 'up_name')) {
-    // If for some reason this field has no initial value, then don't protect it.
+    // If for some reason this field has no initial value, then don't protect
+    // it.
     if ($account->name) {
       $form['account']['name']['#disabled'] = TRUE;
       $form['account']['name']['#value'] = $account->name;
@@ -226,7 +247,8 @@ function userprotect_form_user_profile_form_alter(&$form, &$form_state) {
     }
   }
   if (isset($form['account']['mail']) && !userprotect_check_bypass('up_mail') && userprotect_get_user_protection($account, 'up_mail')) {
-    // If for some reason this field has no initial value, then don't protect it.
+    // If for some reason this field has no initial value, then don't protect
+    // it.
     if ($account->mail) {
       $form['account']['mail']['#disabled'] = TRUE;
       $form['account']['mail']['#value'] = $account->mail;
@@ -302,7 +324,7 @@ function userprotect_user_edit_fields_validate($form, &$form_state) {
 }
 
 /**
- * Implement hook_menu().
+ * Implements hook_menu().
  */
 function userprotect_menu() {
   $items = array();
@@ -375,7 +397,7 @@ function userprotect_menu() {
 }
 
 /**
- * Implement hook_menu_alter().
+ * Implements hook_menu_alter().
  *
  *  Since we also have to guard against menu items being called
  *  directly from a URL, this page check is necessary.  The checks
@@ -392,7 +414,7 @@ function userprotect_menu_alter(&$callbacks) {
  *
  * This replaces user_edit_access from user.module.
  *
- * @param $account
+ * @param object $account
  *   An object representing the user to be edited.
  */
 function userprotect_user_edit_access($account) {
@@ -421,18 +443,18 @@ function userprotect_user_edit_access($account) {
  *
  * This replaces the logic from user.module.
  *
- * @param $account
+ * @param object $account
  *   An object representing the user to be cancelled.
  */
 function userprotect_user_cancel_access($account) {
   // Perform core's access check.
   if (((($GLOBALS['user']->uid == $account->uid) && user_access('cancel account')) || user_access('administer users')) && $account->uid > 0) {
     // At this point, we only need the userprotect-specific validation if:
-    //   1. The current user and the edited user are not the same.
-    //   2. The current user is a user administrator.
+    // 1. The current user and the edited user are not the same.
+    // 2. The current user is a user administrator.
     if (($GLOBALS['user']->uid != $account->uid) && user_access('administer users')) {
-      // Check to see if the user's roles are protecting cancellation, or the user
-      // account itself is protected.
+      // Check to see if the user's roles are protecting cancellation, or the
+      // user account itself is protected.
       if (!userprotect_check_bypass('up_cancel') && userprotect_get_user_protection($account, 'up_cancel')) {
         // If so, and we're at /user/X/cancel, set a message.
         if (arg(0) == 'user' && is_numeric(arg(1)) && arg(2) == 'cancel') {
@@ -454,7 +476,7 @@ function userprotect_user_cancel_access($account) {
 }
 
 /**
- * Implement hook_permission().
+ * Implements hook_permission().
  */
 function userprotect_permission() {
   return array(
@@ -479,7 +501,7 @@ function userprotect_permission() {
 }
 
 /**
- * Implement hook_theme().
+ * Implements hook_theme().
  */
 function userprotect_theme() {
   return array(
@@ -493,11 +515,11 @@ function userprotect_theme() {
 }
 
 /**
- * Implement hook_user_insert().
+ * Implements hook_user_insert().
  */
 function userprotect_user_insert(&$edit, $account) {
 
-  // A new user is being added.  If auto-protect is enabled, then add protection.
+  // A new user is being added. If auto-protect is enabled, then add protection.
   if (variable_get('userprotect_autoprotect', FALSE)) {
     userprotect_add_user($account->uid, 'user');
     $protected = array_filter(variable_get('userprotect_protection_defaults', userprotect_user_protection_defaults()));
@@ -506,7 +528,7 @@ function userprotect_user_insert(&$edit, $account) {
 }
 
 /**
- * Implement hook_user_cancel().
+ * Implements hook_user_cancel().
  */
 function userprotect_user_cancel($edit, $account, $method) {
   switch ($method) {
@@ -517,12 +539,11 @@ function userprotect_user_cancel($edit, $account, $method) {
   }
 }
 /**
- * Implement hook_user_delete().
+ * Implements hook_user_delete().
  */
 function userprotect_user_delete($account) {
   userprotect_delete_user($account->uid);
 }
-
 
 /**
  * Deletes all protections for a user.
@@ -548,39 +569,44 @@ function userprotect_user_admin_account_validate($form, &$form_state) {
   foreach ($uids as $uid) {
     $account = user_load($uid);
 
-	  switch ($operation) {
+    switch ($operation) {
       case 'block':
       case 'unblock':
-        // Check to see if any of the user's roles are protected from status changes,
-        // then check to see if the user is protected.
+        // Check to see if any of the user's roles are protected from status
+        // changes, then check to see if the user is protected.
         if (!userprotect_check_bypass('up_status') && userprotect_get_user_protection($account, 'up_status')) {
-          // If so, then unset the checked user so they will not be processed, and display a warning.
+          // If so, then unset the checked user so they will not be processed,
+          // and display a warning.
           form_set_value($form['accounts'][$uid], 0, $form_state);
           drupal_set_message(t('%user is protected from status changes, and was not updated.', array('%user' => $account->name)), 'error');
           unset($uids[$uid]);
         }
         break;
+
       case 'cancel':
-        // Check to see if any of the user's roles are protected from cancellation,
-        // then check to see if the user is protected.
+        // Check to see if any of the user's roles are protected from
+        // cancellation, then check to see if the user is protected.
         if (!userprotect_check_bypass('up_cancel') && userprotect_get_user_protection($account, 'up_cancel')) {
-          // If so, then unset the checked user so they will not be processed, and display a warning.
-          // Note that the array element has to be completely removed here in order to prevent the
-          // user from being cancelled, due to the nature of the mass cancellation callback.
+          // If so, then unset the checked user so they will not be processed,
+          // and display a warning. Note that the array element has to be
+          // completely removed here in order to prevent the user from being
+          // cancelled, due to the nature of the mass cancellation callback.
           unset($form_state['values']['accounts'][$uid]);
           drupal_set_message(t('%user is protected from cancellation, and was not cancelled.', array('%user' => $account->name)), 'error');
           unset($uids[$uid]);
         }
         break;
+
       case 'add_role':
       case 'remove_role':
       // RoleAssign module compatibility hack.
       case 'roleassign_add_role':
       case 'roleassign_remove_role':
-        // Check to see if any of the user's roles are protected from status changes,
-        // then check to see if the user is protected.
+        // Check to see if any of the user's roles are protected from status
+        // changes, then check to see if the user is protected.
         if (!userprotect_check_bypass('up_roles') && userprotect_get_user_protection($account, 'up_roles')) {
-          // If so, then unset the checked user so they will not be processed, and display a warning.
+          // If so, then unset the checked user so they will not be processed,
+          // and display a warning.
           form_set_value($form['accounts'][$uid], 0, $form_state);
           drupal_set_message(t('%user is protected from role changes, and was not updated.', array('%user' => $account->name)), 'error');
           unset($uids[$uid]);
@@ -592,7 +618,7 @@ function userprotect_user_admin_account_validate($form, &$form_state) {
   // If we've unset all of the users that were checked, then don't continue
   // with the form processing.
   if (!count($uids)) {
-    drupal_set_message('No users selected.', 'error');
+    drupal_set_message(t('No users selected.'), 'error');
     drupal_goto('admin/people');
   }
 }
@@ -600,10 +626,12 @@ function userprotect_user_admin_account_validate($form, &$form_state) {
 /**
  * Builds an array of the inital default protections.
  *
- * @return The default protections array.
+ * @return array
+ *   The default protections array.
  */
 function userprotect_user_protection_defaults() {
-  return array('up_name' => 0,
+  return array(
+    'up_name' => 0,
     'up_mail' => 0,
     'up_pass' => 0,
     'up_status' => 1,
@@ -617,14 +645,15 @@ function userprotect_user_protection_defaults() {
 /**
  * Builds an array of the inital default bypass settings for user admins.
  *
- * @return The default bypass array.
+ * @return array
+ *   The default bypass array.
  */
 function userprotect_administrator_bypass_defaults() {
 
   $defaults = array();
   $protections = userprotect_user_protection_defaults();
   foreach ($protections as $protection => $value) {
-  	$defaults[$protection] = $protection;
+    $defaults[$protection] = $protection;
   }
 
   return $defaults;
@@ -633,10 +662,12 @@ function userprotect_administrator_bypass_defaults() {
 /**
  * Builds an array of all protections and their human-readable text string.
  *
- * @return The constructed array.
+ * @return array
+ *   The constructed array.
  */
 function userprotect_get_protection_display() {
-  return array('up_name' => t('username'),
+  return array(
+    'up_name' => t('username'),
     'up_mail' => t('e-mail'),
     'up_pass' => t('password'),
     'up_status' => t('status'),
@@ -651,8 +682,10 @@ function userprotect_get_protection_display() {
  * Conditionally displays a user message on edit forms listing current
  * protections.
  *
- * @param $account The user account object.
- * @param $protected An array of protections the current user is receiving.
+ * @param object $account
+ *   The user account object.
+ * @param array $protected
+ *   An array of protections the current user is receiving.
  */
 function userprotect_form_display_protections($account, $protected) {
   // If we're initially displaying an edit form, throw a message if
@@ -666,10 +699,13 @@ function userprotect_form_display_protections($account, $protected) {
  * Builds a displayable text string of the protections currently in effect for
  * the specified user.
  *
- * @param $account The user account object.
- * @param $protected An array of protections the current user is receiving.
+ * @param object $account
+ *   The user account object.
+ * @param array $protected
+ *   An array of protections the current user is receiving.
  *
- * @return A text string representing the current protections.
+ * @return string
+ *   A text string representing the current protections.
  */
 function userprotect_display_protections($account, $protected) {
 
@@ -677,14 +713,17 @@ function userprotect_display_protections($account, $protected) {
   $display = userprotect_get_protection_display();
 
   $protections = array();
-  // For each protection, check if any of the user's roles are protected, or the user is
-  // protected.
+  // For each protection, check if any of the user's roles are protected, or the
+  // user is protected.
   foreach ($protected as $protection => $value) {
-  	$protections[] = $display[$protection];
+    $protections[] = $display[$protection];
   }
   // Display if there are protections and it's an admin user.
   if (count($protections) && user_access('administer users')) {
-    $output = t('%user has been protected from the following editing operations: !operations', array('%user' => $account->name, '!operations' => implode(', ', $protections)));
+    $output = t('%user has been protected from the following editing operations: !operations', array(
+      '%user' => $account->name,
+      '!operations' => implode(', ', $protections),
+    ));
   }
   else {
     $output = '';
@@ -696,8 +735,10 @@ function userprotect_display_protections($account, $protected) {
 /**
  * Adds a user to the protections table.
  *
- * @param $uid The UID of the user to be added.
- * @param $type The type of protection to add, either 'user', or 'admin'.
+ * @param int $uid
+ *   The UID of the user to be added.
+ * @param string $type
+ *   The type of protection to add, either 'user', or 'admin'.
  */
 function userprotect_add_user($uid, $type) {
   // Grab the default protections to enable for this user.
@@ -722,8 +763,11 @@ function userprotect_add_user($uid, $type) {
 /**
  * Gives the username of a protected user.
  *
- * @param $uid The user ID.
- * @return The username.
+ * @param int $uid
+ *   The user ID.
+ *
+ * @return string
+ *   The username.
  */
 function userprotect_get_username($uid) {
   return db_query('SELECT name FROM {users} WHERE uid = :uid', array(
@@ -734,10 +778,15 @@ function userprotect_get_username($uid) {
 /**
  * Checks to see if the current user can bypass a protection.
  *
- * @param $protection The protection to check for bypass.
- * @param $uid An optional user to perform the bypass check on (default is current user).
+ * @param string $protection
+ *   The protection to check for bypass.
+ * @param int $uid
+ *   (optional) The user to perform the bypass check on
+ *   Defaults to the uid of the current user.
  *
- * @return TRUE if the user can bypass, FALSE otherwise.
+ * @return bool
+ *   TRUE if the user can bypass.
+ *   FALSE otherwise.
  */
 function userprotect_check_bypass($protection, $uid = NULL) {
 
@@ -781,9 +830,14 @@ function userprotect_check_bypass($protection, $uid = NULL) {
 /**
  * Checks to see if the specified user has the specified protection.
  *
- * @param $account The user object to check.
- * @param $protection The protection to check for.
- * @return TRUE if the user has the specified protection, FALSE otherwise.
+ * @param object $account
+ *   The user object to check.
+ * @param string $protection
+ *   The protection to check for.
+ *
+ * @return bool
+ *   TRUE if the user has the specified protection.
+ *   FALSE otherwise.
  */
 function userprotect_get_user_protection($account, $protection) {
 
@@ -796,24 +850,29 @@ function userprotect_get_user_protection($account, $protection) {
   // Users editing their own accounts have the permissions for e-mail
   // and password determined by the role-based setting in the userprotect
   // section at admin/config/people/permissions. This is done for consistency
-  //  with the way core handles the self-editing of usernames.
+  // with the way core handles the self-editing of usernames.
   if ($uid == $GLOBALS['user']->uid && in_array($protection, array('up_name', 'up_mail', 'up_pass', 'up_openid', 'up_edit'))) {
     switch ($protection) {
       case 'up_name':
         return !user_access('change own username');
+
       case 'up_mail':
         return !user_access('change own e-mail');
+
       case 'up_pass':
         return !user_access('change own password');
+
       case 'up_openid':
         return !user_access('change own openid');
+
       // Always let user access their own edit page.
       case 'up_edit':
         return FALSE;
     }
   }
 
-  // If this user hasn't been added to the result array yet, then pull their information.
+  // If this user hasn't been added to the result array yet, then pull their
+  // information.
   if (!isset($protections[$uid])) {
 
     $result = db_query("SELECT * FROM {userprotect} WHERE uid = :uid AND up_type = :up_type", array(
@@ -825,7 +884,8 @@ function userprotect_get_user_protection($account, $protection) {
     }
   }
 
-  // If per-user protections exist for this user, stop here and return the value of the protection.
+  // If per-user protections exist for this user, stop here and return the value
+  // of the protection.
   if (isset($protections[$uid][$protection])) {
     return $protections[$uid][$protection];
   }
@@ -848,4 +908,3 @@ function userprotect_get_user_protection($account, $protection) {
   // No protection enabled.
   return FALSE;
 }
-
