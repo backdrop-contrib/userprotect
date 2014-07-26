@@ -261,7 +261,8 @@ function userprotect_form_user_profile_form_alter(&$form, &$form_state) {
     // Core stores pass as a required value in 'current_pass_required_values',
     // and we're removing the form element, so remove the pass value from there
     // too to prevent warnings.
-    unset($form['account']['pass'], $form['account']['current_pass'], $form['account']['current_pass_required_values']['#value']['pass']);
+    unset($form['account']['pass'], $form['account']['current_pass']);
+    $form['account']['current_pass_required_values']['#value'] = array();
     $protected['up_pass'] = TRUE;
   }
   if (isset($form['account']['status']) && !userprotect_check_bypass('up_status') && userprotect_get_user_protection($account, 'up_status')) {
@@ -788,41 +789,43 @@ function userprotect_get_username($uid) {
  *
  * @param string $protection
  *   The protection to check for bypass.
- * @param int $uid
+ * @param object $account
  *   (optional) The user to perform the bypass check on
- *   Defaults to the uid of the current user.
+ *   Defaults to the current user.
  *
  * @return bool
  *   TRUE if the user can bypass.
  *   FALSE otherwise.
  */
-function userprotect_check_bypass($protection, $uid = NULL) {
+function userprotect_check_bypass($protection, $account = NULL) {
 
   $bypass = &drupal_static(__FUNCTION__, array());
   $bypass_defaults = &drupal_static(__FUNCTION__ . '_defaults', NULL);
 
+  if (empty($account)) {
+    global $user;
+    $account = $user;
+  }
+
   // If not a user admin, no checks necessary.
-  if (!user_access('administer users')) {
+  if (!user_access('administer users', $account)) {
     return FALSE;
   }
 
-  // Take the current user unless otherwise specified.
-  $uid = isset($uid) ? $uid : $GLOBALS['user']->uid;
-
   // Set the static array for the current admin.
-  if (!isset($bypass[$uid])) {
+  if (!isset($bypass[$account->uid])) {
     $result = db_query("SELECT * FROM {userprotect} WHERE uid = :uid AND up_type = :up_type", array(
-      ':uid' => $uid,
+      ':uid' => $account->uid,
       ':up_type' => 'admin',
     ));
     if ($admin_array = $result->fetchAssoc()) {
-      $bypass[$uid] = $admin_array;
+      $bypass[$account->uid] = $admin_array;
     }
   }
 
   // If a per administrator bypass setting exists, return it.
-  if (isset($bypass[$uid][$protection])) {
-    return $bypass[$uid][$protection];
+  if (isset($bypass[$account->uid][$protection])) {
+    return $bypass[$account->uid][$protection];
   }
   // Otherwise return the default bypass setting.
   else {
