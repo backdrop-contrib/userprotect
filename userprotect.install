@@ -66,6 +66,7 @@ function userprotect_install() {
     'change own e-mail',
     'change own password',
     'change own openid',
+    'edit own account',
   );
   user_role_grant_permissions(DRUPAL_AUTHENTICATED_RID, $permissions);
 }
@@ -169,6 +170,16 @@ function userprotect_update_7000() {
     'description' => 'Cancellation protection.',
   );
   db_change_field('userprotect', 'up_delete', 'up_cancel', $spec);
+}
+
+/**
+ * Grants the 'edit own account' permission to all roles.
+ */
+function userprotect_update_7001() {
+  $rids = array_keys(user_roles(TRUE));
+  foreach ($rids as $rid) {
+    user_role_grant_permissions($rid, array('edit own account'));
+  }
 }
 
 /**

@@ -416,10 +416,14 @@ function userprotect_menu_alter(&$callbacks) {
  *
  * @param object $account
  *   An object representing the user to be edited.
+ *
+ * @return bool
+ *   TRUE if access is granted.
+ *   FALSE otherwise.
  */
 function userprotect_user_edit_access($account) {
   // Perform core's access check.
-  if ((($GLOBALS['user']->uid == $account->uid) || user_access('administer users')) && $account->uid > 0) {
+  if ((($GLOBALS['user']->uid == $account->uid && user_access('edit own account')) || user_access('administer users')) && $account->uid > 0) {
     // Check to see if the user's roles are protecting edits, or the user
     // account itself is protected.
     if (!userprotect_check_bypass('up_edit') && userprotect_get_user_protection($account, 'up_edit')) {
@@ -496,6 +500,10 @@ function userprotect_permission() {
       'title' => t('Administer User protect'),
       'description' => t('Set up access rules for user administrators for various user-related edits.'),
       'restrict access' => TRUE,
+    ),
+    'edit own account' => array(
+      'title' => t('Edit own user account'),
+      'description' => t('Allow users to edit their own account page.'),
     ),
   );
 }
@@ -865,9 +873,8 @@ function userprotect_get_user_protection($account, $protection) {
       case 'up_openid':
         return !user_access('change own openid');
 
-      // Always let user access their own edit page.
       case 'up_edit':
-        return FALSE;
+        return !user_access('edit own account');
     }
   }
 
