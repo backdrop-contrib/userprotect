@@ -17,7 +17,6 @@ abstract class UserProtectWebTestBase extends DrupalWebTestCase {
     $modules = array_merge(array(
       'user',
       'userprotect',
-      'yvklibrary',
     ), $modules);
     parent::setUp($modules);
   }
