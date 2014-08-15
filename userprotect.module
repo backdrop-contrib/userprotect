@@ -227,6 +227,32 @@ function userprotect_form_alter(&$form, &$form_state, $form_id) {
 }
 
 /**
+ * Implements hook_views_bulk_operations_form_alter().
+ *
+ * Ensures user protections are respected in VBO views.
+ */
+function userprotect_views_bulk_operations_form_alter(&$form, $form_state, $vbo) {
+  if (!$vbo->table == 'users') {
+    return;
+  }
+
+  // Alter the appropiate form submitter.
+  $form_element = NULL;
+  if (isset($form['select']['submit']['#submit'])) {
+    $form_element = &$form['select']['submit'];
+  }
+  elseif (isset($form['actions']['submit']['#submit'])) {
+    $form_element = &$form['actions']['submit'];
+  }
+  else {
+    $form_element = &$form;
+  }
+
+  $form_element['#validate'] = isset($form_element['#validate']) ? $form_element['#validate'] : array();
+  array_unshift($form_element['#validate'], 'userprotect_user_admin_account_validate');
+}
+
+/**
  * Implements hook_form_user_profile_form_alter().
  */
 function userprotect_form_user_profile_form_alter(&$form, &$form_state) {
@@ -570,29 +596,52 @@ function userprotect_delete_user($uid) {
 function userprotect_user_admin_account_validate($form, &$form_state) {
 
   // Get the checked users, and the operation name.
-  $uids = array_filter($form_state['values']['accounts']);
-  $operation_rid = explode('-', $form_state['values']['operation']);
-  $operation = $operation_rid[0];
+  if (isset($form_state['operation']) && $form_state['operation'] instanceof ViewsBulkOperationsAction) {
+    $uids = $form_state['selection'];
+    $operation = $form_state['operation']->operationId;
+  }
+  elseif (!empty($form_state['values']['views_bulk_operations'])) {
+    $uids = array_filter($form_state['values']['views_bulk_operations']);
+    $operation = $form_state['values']['operation'];
+  }
+  elseif (!empty($form_state['values']['accounts'])) {
+    $uids = array_filter($form_state['values']['accounts']);
+    $operation_rid = explode('-', $form_state['values']['operation']);
+    $operation = $operation_rid[0];
+  }
+  else {
+    // Uids or operation could not be found. Abort.
+    return;
+  }
 
   // Perform the check for each submitted user.
-  foreach ($uids as $uid) {
+  foreach ($uids as $key => $uid) {
     $account = user_load($uid);
 
     switch ($operation) {
       case 'block':
       case 'unblock':
+      // VBO module compatibility.
+      case 'action::user_block_user_action':
         // Check to see if any of the user's roles are protected from status
         // changes, then check to see if the user is protected.
         if (!userprotect_check_bypass('up_status') && userprotect_get_user_protection($account, 'up_status')) {
           // If so, then unset the checked user so they will not be processed,
           // and display a warning.
-          form_set_value($form['accounts'][$uid], 0, $form_state);
+          if (isset($form['accounts'][$uid])) {
+            form_set_value($form['accounts'][$uid], 0, $form_state);
+          }
           drupal_set_message(t('%user is protected from status changes, and was not updated.', array('%user' => $account->name)), 'error');
-          unset($uids[$uid]);
+          unset($uids[$key]);
+          unset($form_state['selection'][$key]);
+          unset($form_state['values']['views_bulk_operations'][$key]);
         }
         break;
 
       case 'cancel':
+      // VBO module compatibility.
+      case 'action::views_bulk_operations_delete_item':
+      case 'action::views_bulk_operations_user_cancel_action':
         // Check to see if any of the user's roles are protected from
         // cancellation, then check to see if the user is protected.
         if (!userprotect_check_bypass('up_cancel') && userprotect_get_user_protection($account, 'up_cancel')) {
@@ -600,9 +649,13 @@ function userprotect_user_admin_account_validate($form, &$form_state) {
           // and display a warning. Note that the array element has to be
           // completely removed here in order to prevent the user from being
           // cancelled, due to the nature of the mass cancellation callback.
-          unset($form_state['values']['accounts'][$uid]);
+          if (isset($form_state['values']['accounts'][$uid])) {
+            unset($form_state['values']['accounts'][$uid]);
+          }
           drupal_set_message(t('%user is protected from cancellation, and was not cancelled.', array('%user' => $account->name)), 'error');
-          unset($uids[$uid]);
+          unset($uids[$key]);
+          unset($form_state['selection'][$key]);
+          unset($form_state['values']['views_bulk_operations'][$key]);
         }
         break;
 
@@ -611,24 +664,58 @@ function userprotect_user_admin_account_validate($form, &$form_state) {
       // RoleAssign module compatibility hack.
       case 'roleassign_add_role':
       case 'roleassign_remove_role':
+      // VBO module compatibility.
+      case 'action::views_bulk_operations_user_roles_action':
         // Check to see if any of the user's roles are protected from status
         // changes, then check to see if the user is protected.
         if (!userprotect_check_bypass('up_roles') && userprotect_get_user_protection($account, 'up_roles')) {
           // If so, then unset the checked user so they will not be processed,
           // and display a warning.
-          form_set_value($form['accounts'][$uid], 0, $form_state);
+          if (isset($form['accounts'][$uid])) {
+            form_set_value($form['accounts'][$uid], 0, $form_state);
+          }
           drupal_set_message(t('%user is protected from role changes, and was not updated.', array('%user' => $account->name)), 'error');
-          unset($uids[$uid]);
+          unset($uids[$key]);
+          unset($form_state['selection'][$key]);
+          unset($form_state['values']['views_bulk_operations'][$key]);
+        }
+        break;
+
+      // VBO module compatibility.
+      case 'action::views_bulk_operations_modify_action':
+        // First check against all edits.
+        if (!userprotect_check_bypass('up_edit') && userprotect_get_user_protection($account, 'up_edit')) {
+          drupal_set_message(t('%user is protected from any changes, and was not updated.', array('%user' => $account->name)), 'error');
+          unset($uids[$key]);
+          unset($form_state['selection'][$key]);
+          unset($form_state['values']['views_bulk_operations'][$key]);
+          // Continue to the next user.
+          continue;
+        }
+
+        if (empty($form_state['values']['properties']['show_value'])) {
+          // No properties were selected to be changed. Abort.
+          return;
+        }
+
+        // Check which properties are changed.
+        $properties = array_keys(array_filter($form_state['values']['properties']['show_value']));
+        foreach ($properties as $property) {
+          if (in_array($property, array('name', 'mail', 'status', 'roles', 'openid'))) {
+            // Check protection.
+            $protection = 'up_' . $property;
+            if (!userprotect_check_bypass($protection) && userprotect_get_user_protection($account, $protection)) {
+              drupal_set_message(t('%user is protected from @property changes, and was not updated.', array('%user' => $account->name, '@property' => $property)), 'error');
+              unset($uids[$key]);
+              unset($form_state['selection'][$key]);
+              unset($form_state['values']['views_bulk_operations'][$key]);
+              // Continue to the next user.
+              continue 2;
+            }
+          }
         }
         break;
     }
-  }
-
-  // If we've unset all of the users that were checked, then don't continue
-  // with the form processing.
-  if (!count($uids)) {
-    drupal_set_message(t('No users selected.'), 'error');
-    drupal_goto('admin/people');
   }
 }
 

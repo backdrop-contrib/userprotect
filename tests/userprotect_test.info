@@ -12,3 +12,4 @@ files[] = UserProtectBypassWebTest.test
 files[] = UserProtectModuleInstallUninstallWebTest.test
 files[] = UserProtectPermissionsWebTest.test
 files[] = UserProtectProtectionWebTest.test
+files[] = UserProtectViewsBulkOperationsWebTest.test
