@@ -71,23 +71,13 @@ you\'ll find the settings for the module. When the module is initially enabled,
 the default settings are such:</p>
 
 <ul>
-  <li>User administrators bypass all protections.</li>
+  <li>User administrators don\'t bypass any protections.</li>
   <li>The root user specifically bypasses all protections.</li>
-  <li>The anonymous user (uid 0) and root user (uid 1) are protected
-       from all edits, cancellation, and OpenID operations.</li>
+  <li>The anonymous user (uid 0) is protected from all edits, cancellation and OpenID operations.</li>
+  <li>The root user (uid 1) is protected from the cancellation operation.</li>
   <li>All role protections are disabled.</li>
-  <li>The \'change own e-mail\', \'change own password\' and \'change own openid\'
-      permissions are enabled for authenticated users in the <a href="!permissions">
-      User protect permissions settings</a>.
+  <li>The \'change own e-mail\', \'change own password\' and \'change own openid\' and \'edit own account\' permissions are enabled for authenticated users in the <a href="!permissions">User protect permissions settings</a>.
 </ul>
-
-<p>This effectively amounts to no protections.  It is suggested that you turn off
-as many default administrator bypass settings as possible, and set bypass settings
-for specific user administrators -- this allows you to take advantage
-of the status, roles, cancellation, openid and edit protections in a meaningful
-way. Because of the per-user bypass/protection settings for the anonymous and
-root user, this will also begin protecting those users, without compromising
-the root user\'s access to the entire site.</p>
 
 <p>Important note: In order to protect a user from cancellation (by visiting
 user/X/cancel directly) and/or OpenID edits (by visiting user/X/openid
@@ -745,11 +735,10 @@ function userprotect_user_protection_defaults() {
  *   The default bypass array.
  */
 function userprotect_administrator_bypass_defaults() {
-
   $defaults = array();
   $protections = userprotect_user_protection_defaults();
   foreach ($protections as $protection => $value) {
-    $defaults[$protection] = $protection;
+    $defaults[$protection] = 0;
   }
 
   return $defaults;

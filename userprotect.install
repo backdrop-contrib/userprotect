@@ -41,9 +41,9 @@ function userprotect_install() {
       'up_status' => 0,
       'up_roles' => 0,
       'up_cancel' => 1,
-      'up_edit' => 1,
+      'up_edit' => 0,
       'up_type' => 'user',
-      'up_openid' => 1,
+      'up_openid' => 0,
     ))->execute();
 
   // Default administrator bypass.
