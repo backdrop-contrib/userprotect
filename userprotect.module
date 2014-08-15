@@ -271,12 +271,13 @@ function userprotect_user_edit_fields_validate($form, &$form_state) {
 
   switch ($field) {
     case 'roles':
-      // Authenticated user isn't a valid checked item.
-      unset($account->roles[DRUPAL_AUTHENTICATED_RID]);
       // Add values for all role checkboxes that are valid roles for this user.
       foreach ($account->roles as $rid => $role) {
-        if (isset($form[$rid])) {
-          form_set_value($form[$rid], 1, $form_state);
+        // Authenticated user isn't a valid checked item.
+        if ($rid != DRUPAL_AUTHENTICATED_RID) {
+          if (isset($form[$rid])) {
+            form_set_value($form[$rid], 1, $form_state);
+          }
         }
       }
       break;
