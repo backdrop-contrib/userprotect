@@ -2,3 +2,7 @@ name = "User protect"
 description = "Allows admins to protect users from being edited or cancelled, on a per-user basis."
 core = "7.x"
 configure = admin/config/people/userprotect
+
+test_dependencies[] = entity:entity
+test_dependencies[] = views:views
+test_dependencies[] = views_bulk_operations:views_bulk_operations
