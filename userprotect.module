@@ -627,7 +627,7 @@ function userprotect_user_admin_account_validate($form, &$form_state) {
           unset($form_state['selection'][$key]);
           unset($form_state['values']['views_bulk_operations'][$key]);
           // Continue to the next user.
-          continue;
+          continue 2;
         }
 
         if (empty($form_state['values']['properties']['show_value'])) {
@@ -647,7 +647,7 @@ function userprotect_user_admin_account_validate($form, &$form_state) {
               unset($form_state['selection'][$key]);
               unset($form_state['values']['views_bulk_operations'][$key]);
               // Continue to the next user.
-              continue 2;
+              continue 3;
             }
           }
         }
