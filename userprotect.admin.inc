@@ -34,11 +34,18 @@ function userprotect_administrator_bypass() {
 function userprotect_protections_bypass($type) {
 
   // Build the header.
-  $header = array(array('data' => t('User'), 'field' => 'name', 'sort' => 'asc'));
+  $header = array(array(
+      'data' => t('User'),
+      'field' => 'name',
+      'sort' => 'asc',
+    ));
 
   $protect_columns = userprotect_get_protection_display();
   foreach ($protect_columns as $field => $data) {
-    $header[] = array('data' => $data, 'field' => $field);
+    $header[] = array(
+      'data' => $data,
+      'field' => $field,
+    );
   }
   $header[] = array('data' => t('Operations'));
 
@@ -160,24 +167,30 @@ function theme_userprotect_protections_bypass($variables) {
   if (isset($form['user'])) {
     foreach (element_children($form['user']) as $uid) {
       $row = array();
-      $row[] = drupal_render($form[$uid]['name']);
+      $row[] = backdrop_render($form[$uid]['name']);
       // Build the protections for the user row.
       foreach ($form['#protections'] as $protection) {
-        $row[] = drupal_render($form['protection'][$uid][$protection]);
+        $row[] = backdrop_render($form['protection'][$uid][$protection]);
       }
-      $row[] = drupal_render($form[$uid]['operations']);
+      $row[] = backdrop_render($form[$uid]['operations']);
       $rows[] = $row;
     }
   }
   // Add the last row with the add textfield.
   $rows[] = array(
-    array('data' => drupal_render($form['up_add']), 'colspan' => strval(count($form['#header']) - 1)),
-    array('data' => drupal_render($form['up_add_text']), 'colspan' => '1'),
+    array(
+      'data' => backdrop_render($form['up_add']),
+      'colspan' => strval(count($form['#header']) - 1),
+    ),
+    array(
+      'data' => backdrop_render($form['up_add_text']),
+      'colspan' => '1',
+    ),
   );
 
   // Theme the table.
   $output = theme('table', array('header' => $form['#header'], 'rows' => $rows));
-  $output .= drupal_render_children($form);
+  $output .= backdrop_render_children($form);
 
   return $output;
 }
@@ -233,10 +246,10 @@ function userprotect_protections_bypass_submit($form, &$form_state) {
     userprotect_add_user($uid, $type);
     $username = userprotect_get_username($uid);
     if ($type == 'user') {
-      drupal_set_message(t('%user is now protected.', array('%user' => $username)));
+      backdrop_set_message(t('%user is now protected.', array('%user' => $username)));
     }
     elseif ($type == 'admin') {
-      drupal_set_message(t('%user now has bypass capabilities matching the default protections for newly protected users.', array('%user' => $username)));
+      backdrop_set_message(t('%user now has bypass capabilities matching the default protections for newly protected users.', array('%user' => $username)));
     }
   }
   if (isset($form_state['values']['protection'])) {
@@ -260,10 +273,10 @@ function userprotect_protections_bypass_submit($form, &$form_state) {
         ->execute();
     }
     if ($type == 'user') {
-      drupal_set_message(t('Protection settings updated.'));
+      backdrop_set_message(t('Protection settings updated.'));
     }
     elseif ($type == 'admin') {
-      drupal_set_message(t('Bypass settings updated.'));
+      backdrop_set_message(t('Bypass settings updated.'));
     }
   }
 }
@@ -301,10 +314,10 @@ function userprotect_protected_users_delete_form_submit($form, &$form_state) {
     ->condition('up_type', $type)
     ->execute();
   if ($type == 'user') {
-    drupal_set_message(t('%user is no longer protected.', array('%user' => $account->name)));
+    backdrop_set_message(t('%user is no longer protected.', array('%user' => $account->name)));
   }
   elseif ($type == 'admin') {
-    drupal_set_message(t('%user is no longer enabled for bypass.', array('%user' => $account->name)));
+    backdrop_set_message(t('%user is no longer enabled for bypass.', array('%user' => $account->name)));
   }
 
   $form_state['redirect'] = "admin/config/people/userprotect/$admin_page";
@@ -319,6 +332,7 @@ function userprotect_protected_users_delete_form_submit($form, &$form_state) {
 function userprotect_protected_roles() {
 
   $form = array();
+  $form['#config'] = 'userprotect.settings';
 
   // Get the list of all protections, and the current default settings.
   $options = userprotect_get_protection_display();
@@ -332,7 +346,7 @@ function userprotect_protected_roles() {
   // Grab all roles but the anonymous role, and grab the current default
   // settings.
   $roles = user_roles(TRUE);
-  $protected_roles = variable_get('userprotect_role_protections', array());
+  $protected_roles = config_get('userprotect.settings', 'userprotect_role_protections');
 
   // This is a complete list of protections for reference.
   $protections = array_keys(userprotect_user_protection_defaults());
@@ -369,15 +383,17 @@ function userprotect_protected_roles() {
  *   An array representing the form.
  */
 function userprotect_protection_defaults() {
+  $config = config('userprotect.settings');
 
   // Get the list of all protections, and the current default settings.
   $options = userprotect_get_protection_display();
-  $current_defaults = variable_get('userprotect_protection_defaults', userprotect_user_protection_defaults());
+  $current_defaults = $config->get('userprotect_protection_defaults');
 
   // Transform the defaults into proper checkboxes defaults.
   $defaults = array_keys(array_filter($current_defaults));
 
   // A set of checkboxes that lists the default protection settings.
+  $form['#config'] = 'userprotect.settings';
   $form['userprotect_protection_defaults'] = array(
     '#type' => 'checkboxes',
     '#title' => t('User protection defaults'),
@@ -390,7 +406,7 @@ function userprotect_protection_defaults() {
     '#type' => 'checkbox',
     '#title' => t('Auto-protect new users'),
     '#description' => t('If selected, all newly created users will automatically be protected and assigned the default protections above.'),
-    '#default_value' => variable_get('userprotect_autoprotect', FALSE),
+    '#default_value' => $config->get('userprotect_autoprotect'),
   );
   // A set of checkboxes that lists the default protection settings.
   $form['userprotect_administrator_bypass_defaults'] = array(
@@ -398,7 +414,7 @@ function userprotect_protection_defaults() {
     '#title' => t('Administrator bypass defaults'),
     '#description' => t('If selected, all users with the \'administer users\' permission will be allowed to bypass the protection<br \><em>Note: this default setting is overridden by the <a href="!per_user_bypass">per-user administrator bypass settings</a>.</em>.', array('!per_user_bypass' => url('admin/config/people/userprotect/administrator_bypass'))),
     '#options' => $options,
-    '#default_value' => variable_get('userprotect_administrator_bypass_defaults', userprotect_administrator_bypass_defaults()),
+    '#default_value' => $config->get('userprotect_administrator_bypass_defaults'),
   );
 
   return system_settings_form($form);
@@ -419,10 +435,10 @@ function theme_userprotect_admin_role_table($variables) {
   // Build a row for each role.
   foreach (element_children($form['userprotect_role_protections']) as $rid) {
     $row = array();
-    $row[] = drupal_render($form['userprotect_role_protections'][$rid]['name']);
+    $row[] = backdrop_render($form['userprotect_role_protections'][$rid]['name']);
     // Build the protections for each row.
     foreach ($form['#protections'] as $protection) {
-      $row[] = drupal_render($form['userprotect_role_protections'][$rid][$protection]);
+      $row[] = backdrop_render($form['userprotect_role_protections'][$rid][$protection]);
     }
     $rows[] = $row;
   }
@@ -431,7 +447,7 @@ function theme_userprotect_admin_role_table($variables) {
   $output = t('<h3>Protections by role</h3>');
   $output .= theme('table', array('header' => $form['#header'], 'rows' => $rows));
   $output .= t('<div class="description">Setting a protection for a role will enable that protection for all users in the role.</div>');
-  $output .= drupal_render_children($form);
+  $output .= backdrop_render_children($form);
 
   return $output;
 }

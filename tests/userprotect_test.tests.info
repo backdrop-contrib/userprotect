@@ -1,0 +1,36 @@
+[UserProtectBypassWebTest]
+name = Bypass protection API test
+description = Tests if bypass rules are respected.
+group = User protect
+file = UserProtectBypassWebTest.test
+
+[UserProtectModuleInstallUninstallWebTest]
+name = Module installation and uninstallation
+description = 
+group = User protect
+file = UserProtectModuleInstallUninstallWebTest.test
+
+[UserProtectPermissionsWebTest]
+name = User protect permissions
+description = Tests if permissions "Change own e-mail", "Change own password" and "Change own account" are respected.
+group = User protect
+file = UserProtectPermissionsWebTest.test
+
+[UserProtectProtectionWebTest]
+name = Protection tests
+description = Tests each type of protection in action.
+group = User protect
+file = UserProtectProtectionWebTest.test
+
+[UserProtectViewsBulkOperationsWebTest]
+name = Views bulk operations protection
+description = Tests if user bulk operations provided by Views Bulk Operations are protected.
+group = User protect
+file = UserProtectViewsBulkOperationsWebTest.test
+
+[UserProtectWebTestBase]
+name = UserProtectWebTestBase
+description = UserProtectWebTestBase
+group = userprotect_test
+file = UserProtectWebTestBase.test
+

@@ -11,6 +11,7 @@
  * Conditionally turns off error reporting.
  */
 function userprotect_test_init() {
+  // TODO This variable was probably removed in Backdrop without replacement.
   if (variable_get('error_reporting', NULL) === 0) {
     error_reporting(0);
   }
@@ -22,5 +23,13 @@ function userprotect_test_init() {
 function userprotect_test_views_api() {
   return array(
     'api' => 3,
+  );
+}
+
+/**
+ * Implements hook_autoload_info().
+ */
+function userprotect_test_autoload_info() {
+  return array(
   );
 }

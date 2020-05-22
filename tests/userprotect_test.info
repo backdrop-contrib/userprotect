@@ -1,14 +1,9 @@
 name = "User protect Tests"
 description = "Testing module for User protect."
 package = Testing
-core = "7.x"
+backdrop = 1.x
+type = module
 dependencies[] = userprotect
 hidden = TRUE
 
 ; Test cases
-files[] = UserProtectWebTestBase.test
-files[] = UserProtectBypassWebTest.test
-files[] = UserProtectModuleInstallUninstallWebTest.test
-files[] = UserProtectPermissionsWebTest.test
-files[] = UserProtectProtectionWebTest.test
-files[] = UserProtectViewsBulkOperationsWebTest.test

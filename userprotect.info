@@ -1,6 +1,7 @@
 name = "User protect"
 description = "Allows admins to protect users from being edited or cancelled, on a per-user basis."
-core = "7.x"
+backdrop = 1.x
+type = module
 configure = admin/config/people/userprotect
 
 test_dependencies[] = entity:entity
