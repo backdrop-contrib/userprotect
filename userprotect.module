@@ -6,118 +6,6 @@
  */
 
 /**
- * Implements hook_help().
- *
- * Returns various help texts.
- */
-function userprotect_help($path, $arg) {
-  switch ($path) {
-    case 'admin/config/people/userprotect':
-    case 'admin/config/people/userprotect/protected_users':
-      $output = t('These settings override any <a href="!protected_roles">role-based protections</a> for the user in question. For more information on how to configure userprotect settings, see the <a href="!help">help section</a>.', array('!help' => url('admin/help/userprotect'), '!protected_roles' => url('admin/config/people/userprotect/protected_roles')));
-      return $output;
-
-    case 'admin/config/people/userprotect/protected_roles':
-      $output = t('These settings add protections to any user who is in the specified role. They are overridden by any <a href="!protected_users">per-user protections</a> for the user in question. For more information on how to configure userprotect settings, see the <a href="!help">help section</a>.', array('!help' => url('admin/help/userprotect'), '!protected_users' => url('admin/config/people/userprotect/protected_users')));
-      return $output;
-
-    case 'admin/config/people/userprotect/administrator_bypass':
-      $output = t('These settings add bypasses to any user who has the \'administer users\' permission. They override the <a href="!protection_defaults">defaults</a> for the user in question. For more information on how to configure userprotect settings, see the <a href="!help">help section</a>.', array('!help' => url('admin/help/userprotect'), '!protection_defaults' => url('admin/config/people/userprotect/protection_defaults')));
-      return $output;
-
-    case 'admin/config/people/userprotect/protection_defaults':
-      $output = t('Set global default protection values here. For more information on how to configure userprotect settings, see the <a href="!help">help section</a>.', array('!help' => url('admin/help/userprotect')));
-      return $output;
-
-    case 'admin/help#userprotect':
-      $vars = array(
-        '@admin-people' => url('admin/people'),
-        '@userprotect-settings' => url('admin/config/people/userprotect/protected_users'),
-        '@protected-users' => url('admin/config/people/userprotect/protected_users'),
-        '@protected-roles' => url('admin/config/people/userprotect/protected_roles'),
-        '@userprotect-administrator-bypass' => url('admin/config/people/userprotect/administrator_bypass'),
-        '@protection-defaults' => url('admin/config/people/userprotect/protection_defaults'),
-        '@roleassign-module' => url('http://drupal.org/project/roleassign', array(
-          'absolute' => TRUE,
-        )),
-        '@permissions-page-userprotect' => url('admin/people/permissions', array(
-          'fragment' => 'module-userprotect',
-        )),
-      );
-
-      $output = '<p>' . t('This module provides various editing protections for users. The protections can be specific to a user, or applied to all users in a role. The following protections are supported:', $vars) . '</p>';
-      $protections = array(
-        '#theme' => 'item_list',
-        '#items' => array(
-          t('Username'),
-          t('E-mail address'),
-          t('Password'),
-          t('Status changes'),
-          t('Roles'),
-          t('Cancellation'),
-          t('OpenID identities (both adding and deleting)'),
-          t('All edits (any accessed via user/X/edit)'),
-        ),
-      );
-      $output .= backdrop_render($protections);
-      $output .= '<p>' . t('When a protection is enabled for a specified user (or the protection is enabled because the user belongs to a role that has the protection), it prevents the editing operation in question that anyone might try to perform on the user -- unless an administrator who is permitted to bypass the protection is editing the specified user.  The module will protect fields by disabling them at user/X/edit.', $vars) . '</p>';
-      $output .= '<p>' . t('User administrators may be configured to bypass specified protections, on either a global or per-administrator basis.', $vars) . '</p>';
-      $output .= '<p>' . t('These protections are valid both when trying to edit the user directly from their user/X/edit page, or using the <a href="@admin-people">mass user editing operations</a>.', $vars) . '</p>';
-      $output .= '<p>' . t('The module also provides protection at the paths user/X/edit and user/X/cancel, should anyone try to visit those paths directly.', $vars) . '</p>';
-      $output .= '<p>' . t('<em>Note: this module is compatible with the <a href="@roleassign-module">RoleAssign</a> module.</em>', $vars) . '</p>';
-
-      $output .= '<h4>' . t('Settings') . '</h4>';
-      $output .= '<p>' . t('At the <a href="@userprotect-settings">User protect settings page</a>, you\'ll find the settings for the module. When the module is initially enabled, the default settings are such:', $vars) . '</p>';
-      $default_settings = array(
-        '#theme' => 'item_list',
-        '#items' => array(
-          t("User administrators don't bypass any protections."),
-          t('The root user specifically bypasses all protections.'),
-          t('The anonymous user (uid 0) is protected from all edits, cancellation and OpenID operations.'),
-          t('The root user (uid 1) is protected from the cancellation operation.'),
-          t('All role protections are disabled.'),
-          t('The \'change own e-mail\', \'change own password\', \'change own openid\' and \'edit own account\' permissions are enabled for authenticated users in the <a href="@permissions-page-userprotect">User protect permissions settings</a>.', $vars),
-        ),
-      );
-      $output .= backdrop_render($default_settings);
-      $output .= '<p>' . t("Important note: In order to protect a user from cancellation (by visiting user/X/cancel directly) and/or OpenID edits (by visiting user/X/openid directly), you must enable the 'cancel' and/or 'openid' protection specifically. Enabling 'all account edits' does not enable these protections!", $vars) . '</p>';
-      $output .= '<p>' . t('Also note that this module only provides protection against actions via the website interface -- operations that a module takes directly are not protected! This module should play well with other contributed modules, but there is no guarantee that all protections will remain intact if you install modules outside of the backdrop core installation.', $vars) . '</p>';
-
-      $output .= '<h4>' . t('Adding protections for a single user') . '</h4>';
-      $output .= '<p>' . t('This is done at <a href="@protected-users">per-user protections</a>. Any time a user is added for protection, they will initially receive the <a href="@protection-defaults">default protections</a>.', $vars) . '</p>';
-
-      $output .= '<h4>' . t('Adding protections for roles') . '</h4>';
-      $output .= '<p>' . t('This is done at <a href="@protected-roles">role-based protections</a>. <em>Be cautious</em> about adding protections by role, or you can lock out users from things unintentionally!', $vars) . '</p>';
-      $output .= '<p>' . t("In particular, note the if you enable role protections for a specific role, and you have no bypasses enabled, you've effectively locked out any role editing for that role by anybody, unless you come back to the settings page and disable the role protection!", $vars) . '</p>';
-
-      $output .= '<h4>' . t('Adding administrator bypass rules') . '</h4>';
-      $output .= '<p>' . t('One of the more powerful features of the module is administrator bypass. Any user that has been granted the \'administer users\' permission can be configured to bypass any protection, either via the <a href="@protection-defaults">default administrator bypass settings</a>, or via a <a href="@userprotect-administrator-bypass">per-administrator setting</a>. If a bypass is enabled for a user administrator, they will be given editing rights on that protection regardless if it is enabled for a single user or an entire role.', $vars) . '</p>';
-      $output .= '<p>' . t('Note that the per-administrator bypass settings override the default bypass settings.', $vars) . '</p>';
-
-      $output .= '<h4>' . t('Default protection settings') . '</h4>';
-      $output .= '<p>' . t('Set the <a href="@protection-defaults">default protections</a> for newly protected users. In addition, you can enable the auto-protect feature, which will automatically add the default protections to any newly created user accounts, and set default bypass options for all user administrators.', $vars) . '</p>';
-
-      $output .= '<h4>' . t('How the module determines a protection') . '</h4>';
-      $output .= '<p>' . t("In order to properly use User protect, it's important to understand how the module determines if a specified field is to be protected.  Here is the basic logic:", $vars) . '</p>';
-      $logics = array(
-        '#theme' => 'item_list',
-        '#type' => 'ol',
-        '#items' => array(
-          t('If the current user is a user administrator, check if it has per-administrator bypass settings. If so, then check to see if it is allowed to bypass the protection.  If so, then stop the checks and allow editing of the field.'),
-          t('If not, then if the current user is a user administrator, check if the default administrator bypass is enabled for the protection in question. If so, then stop the checks and allow editing of the field.', $vars),
-          t("If not, check if the user is editing its own account.  If so, determine the protections for e-mail, password, and openid by examining the userprotect permissions for 'change own e-mail', 'change own password' and 'change own openid', then continue with the rest of the checks below.", $vars),
-          t('If not, check if the protection is set for the individual user being edited. If so, then stop the checks here, and prevent editing of the field (this effectively means that individual protections override role protections).', $vars),
-          t('If not, then examine all the roles for the user being edited. If any of those roles have the protection enabled, then prevent editing of the field.', $vars),
-          t('If not, then allow the field to be edited.', $vars),
-        ),
-      );
-      $output .= backdrop_render($logics);
-
-      return $output;
-  }
-}
-
-/**
  * Implements hook_form_alter().
  */
 function userprotect_form_alter(&$form, &$form_state, $form_id) {
@@ -499,7 +387,7 @@ function userprotect_config_info() {
 /**
  * Implements hook_user_insert().
  */
-function userprotect_user_insert(&$edit, $account) {
+function userprotect_user_insert($account) {
   $config = config('userprotect.settings');
 
   // A new user is being added. If auto-protect is enabled, then add protection.

@@ -47,7 +47,7 @@ class UserProtectPermissionsWebTest extends UserProtectWebTestBase {
       'edit own account',
     );
     user_role_revoke_permissions(DRUPAL_AUTHENTICATED_RID, $permissions);
-    drupal_static_reset('checkPermissions');
+    backdrop_static_reset('checkPermissions');
   }
 
   /**
@@ -61,10 +61,10 @@ class UserProtectPermissionsWebTest extends UserProtectWebTestBase {
       'up_pass' => 1,
     ));
 
-    $account = $this->drupalCreateUser(array('administer userprotect'));
-    $this->drupalLogin($account);
-    $this->drupalGet('admin/config/people/userprotect/protected_users');
-    $this->drupalGet('admin/config/people/userprotect/protected_roles');
+    $account = $this->backdropCreateUser(array('administer userprotect'));
+    $this->backdropLogin($account);
+    $this->backdropGet('admin/config/people/userprotect/protected_users');
+    $this->backdropGet('admin/config/people/userprotect/protected_roles');
   }
 
   /**
@@ -75,13 +75,13 @@ class UserProtectPermissionsWebTest extends UserProtectWebTestBase {
    */
   protected function testEditOwnMail() {
     // Create account that may edit its own mail address.
-    $account = $this->drupalCreateUser(array('change own e-mail', 'edit own account'));
-    $this->drupalLogin($account);
+    $account = $this->backdropCreateUser(array('change own e-mail', 'edit own account'));
+    $this->backdropLogin($account);
 
     $edit = array(
       'mail' => $this->randomName() . '@example.com',
     );
-    $this->drupalPost('user/' . $account->uid . '/edit', $edit, t('Save'));
+    $this->backdropPost('user/' . $account->uid . '/edit', $edit, t('Save'));
 
     // Assert the mail address changed.
     $account = user_load($account->uid, TRUE);
@@ -96,9 +96,9 @@ class UserProtectPermissionsWebTest extends UserProtectWebTestBase {
    */
   protected function testNoEditOwnMail() {
     // Create account that may NOT edit its own mail address.
-    $account = $this->drupalCreateUser(array('edit own account'));
+    $account = $this->backdropCreateUser(array('edit own account'));
     $expected_mail = $account->mail;
-    $this->drupalLogin($account);
+    $this->backdropLogin($account);
 
     $edit = array(
       'mail' => $this->randomName() . '@example.com',
@@ -118,8 +118,8 @@ class UserProtectPermissionsWebTest extends UserProtectWebTestBase {
    */
   protected function testEditOwnPass() {
     // Create account that may edit its own password.
-    $account = $this->drupalCreateUser(array('change own password', 'edit own account'));
-    $this->drupalLogin($account);
+    $account = $this->backdropCreateUser(array('change own password', 'edit own account'));
+    $this->backdropLogin($account);
 
     $new_pass = $this->randomName();
     $edit = array(
@@ -127,13 +127,13 @@ class UserProtectPermissionsWebTest extends UserProtectWebTestBase {
       'pass[pass1]' => $new_pass,
       'pass[pass2]' => $new_pass,
     );
-    $this->drupalPost('user/' . $account->uid . '/edit', $edit, t('Save'));
+    $this->backdropPost('user/' . $account->uid . '/edit', $edit, t('Save'));
 
     // Assert the password changed.
     $account = user_load($account->uid, TRUE);
     $account->pass_raw = $new_pass;
-    $this->drupalLogout();
-    $this->drupalLogin($account);
+    $this->backdropLogout();
+    $this->backdropLogin($account);
   }
 
   /**
@@ -144,9 +144,9 @@ class UserProtectPermissionsWebTest extends UserProtectWebTestBase {
    */
   protected function testNoEditOwnPass() {
     // Create account that may NOT edit its own password.
-    $account = $this->drupalCreateUser(array('edit own account'));
+    $account = $this->backdropCreateUser(array('edit own account'));
     $expected_pass = $account->pass_raw;
-    $this->drupalLogin($account);
+    $this->backdropLogin($account);
 
     $new_pass = $this->randomName();
     $edit = array(
@@ -159,8 +159,8 @@ class UserProtectPermissionsWebTest extends UserProtectWebTestBase {
     // Assert the password did not change.
     $account = user_load($account->uid, TRUE);
     $account->pass_raw = $expected_pass;
-    $this->drupalLogout();
-    $this->drupalLogin($account);
+    $this->backdropLogout();
+    $this->backdropLogin($account);
   }
 
   /**
@@ -171,11 +171,11 @@ class UserProtectPermissionsWebTest extends UserProtectWebTestBase {
    */
   protected function testEditOwnAccount() {
     // Create an account that may edit its own account.
-    $account = $this->drupalCreateUser(array('edit own account'));
-    $this->drupalLogin($account);
+    $account = $this->backdropCreateUser(array('edit own account'));
+    $this->backdropLogin($account);
 
     // Assert the user can edit its own account.
-    $this->drupalGet('user/' . $account->uid . '/edit');
+    $this->backdropGet('user/' . $account->uid . '/edit');
     $this->assertResponse(200, "The user may edit its own account.");
   }
 
@@ -187,11 +187,11 @@ class UserProtectPermissionsWebTest extends UserProtectWebTestBase {
    */
   protected function testNoEditOwnAccount() {
     // Create an account that may NOT edit its own account.
-    $account = $this->drupalCreateUser();
-    $this->drupalLogin($account);
+    $account = $this->backdropCreateUser();
+    $this->backdropLogin($account);
 
     // Assert the user can edit its own account.
-    $this->drupalGet('user/' . $account->uid . '/edit');
+    $this->backdropGet('user/' . $account->uid . '/edit');
     $this->assertResponse(403, "The user may NOT edit its own account.");
   }
 }

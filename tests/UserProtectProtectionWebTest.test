@@ -50,8 +50,8 @@ class UserProtectProtectionWebTest extends UserProtectWebTestBase {
       'up_edit' => 0,
     ));
 
-    $this->account = $this->drupalCreateUser(array('administer users', 'administer permissions'));
-    $this->drupalLogin($this->account);
+    $this->account = $this->backdropCreateUser(array('administer users', 'administer permissions'));
+    $this->backdropLogin($this->account);
   }
 
   /**
@@ -111,8 +111,8 @@ class UserProtectProtectionWebTest extends UserProtectWebTestBase {
     // Try to login as this user with the expected password.
     $protected_account = user_load($protected_account->uid, TRUE);
     $protected_account->pass_raw = $expected_pass;
-    $this->drupalLogout();
-    $this->drupalLogin($protected_account);
+    $this->backdropLogout();
+    $this->backdropLogin($protected_account);
   }
 
   /**
@@ -139,12 +139,12 @@ class UserProtectProtectionWebTest extends UserProtectWebTestBase {
     $protected_account = $this->createProtectedUser(array('up_roles' => 1));
 
     // Add a role to the protected account.
-    $rid1 = $this->drupalCreateRole(array());
+    $rid1 = $this->backdropCreateRole(array());
     $protected_account->roles[$rid1] = $rid1;
     user_save($protected_account);
 
     // Add another role. We try to add this role to the user form later.
-    $rid2 = $this->drupalCreateRole(array());
+    $rid2 = $this->backdropCreateRole(array());
 
     // Re-load the user and check its roles.
     $protected_account = user_load($protected_account->uid, TRUE);

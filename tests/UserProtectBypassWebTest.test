@@ -48,7 +48,7 @@ class UserProtectBypassWebTest extends UserProtectWebTestBase {
     ));
 
     // Create the operating account.
-    $this->account = $this->drupalCreateUser(array('administer users', 'administer permissions'));
+    $this->account = $this->backdropCreateUser(array('administer users', 'administer permissions'));
   }
 
   /**
@@ -118,8 +118,8 @@ class UserProtectBypassWebTest extends UserProtectWebTestBase {
     $this->assertFalse(userprotect_check_bypass($protection, $this->account));
 
     // Clear static cache for userprotect_check_bypass() function.
-    drupal_static_reset('userprotect_check_bypass');
-    drupal_static_reset('userprotect_check_bypass_defaults');
+    backdrop_static_reset('userprotect_check_bypass');
+    backdrop_static_reset('userprotect_check_bypass_defaults');
 
     // Now, create the bypass rule.
     $this->createBypassRule($this->account->uid, array($protection => 1));
@@ -133,8 +133,8 @@ class UserProtectBypassWebTest extends UserProtectWebTestBase {
       ->execute();
 
     // Clear static cache for userprotect_check_bypass() function again.
-    drupal_static_reset('userprotect_check_bypass');
-    drupal_static_reset('userprotect_check_bypass_defaults');
+    backdrop_static_reset('userprotect_check_bypass');
+    backdrop_static_reset('userprotect_check_bypass_defaults');
 
     // Assert that the operating account may not bypass anymore.
     $this->assertFalse(userprotect_check_bypass($protection, $this->account));
@@ -155,8 +155,8 @@ class UserProtectBypassWebTest extends UserProtectWebTestBase {
     variable_set('userprotect_administrator_bypass_defaults', $protections);
 
     // Clear static cache for userprotect_check_bypass() function again.
-    drupal_static_reset('userprotect_check_bypass');
-    drupal_static_reset('userprotect_check_bypass_defaults');
+    backdrop_static_reset('userprotect_check_bypass');
+    backdrop_static_reset('userprotect_check_bypass_defaults');
 
     // Assert that the operating account may bypass again.
     $this->assertTrue(userprotect_check_bypass($protection, $this->account));

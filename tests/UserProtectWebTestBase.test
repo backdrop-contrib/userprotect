@@ -8,10 +8,10 @@
 /**
  * Base class for User protect web tests.
  */
-abstract class UserProtectWebTestBase extends DrupalWebTestCase {
+abstract class UserProtectWebTestBase extends BackdropWebTestCase {
 
   /**
-   * Overrides DrupalWebTestCase::setUp().
+   * Overrides BackdropWebTestCase::setUp().
    */
   public function setUp($modules = array()) {
     $modules = array_merge(array(
@@ -33,7 +33,7 @@ abstract class UserProtectWebTestBase extends DrupalWebTestCase {
    */
   protected function createProtectedRole(array $protections = array()) {
     // Create a role.
-    $rid = $this->drupalCreateRole(array());
+    $rid = $this->backdropCreateRole(array());
 
     // Protect this role.
     $this->createProtectionRule($rid, $protections);
@@ -53,7 +53,7 @@ abstract class UserProtectWebTestBase extends DrupalWebTestCase {
    */
   protected function createProtectedUser(array $protections = array()) {
     // Create a user.
-    $account = $this->drupalCreateUser();
+    $account = $this->backdropCreateUser();
 
     // Protect this user.
     $this->createProtectionRule($account->uid, $protections, 'user');
@@ -76,7 +76,7 @@ abstract class UserProtectWebTestBase extends DrupalWebTestCase {
     $rid = $this->createProtectedRole($protections);
 
     // Create an account with this protected role.
-    $protected_account = $this->drupalCreateUser();
+    $protected_account = $this->backdropCreateUser();
     $protected_account->roles[$rid] = $rid;
     user_save($protected_account);
 
@@ -125,11 +125,11 @@ abstract class UserProtectWebTestBase extends DrupalWebTestCase {
         ->fetchField();
       if ($id == $saved_uid) {
         // Overwrite record.
-        drupal_write_record('userprotect', $protections, array('uid'));
+        backdrop_write_record('userprotect', $protections, array('uid'));
       }
       else {
         // New record.
-        drupal_write_record('userprotect', $protections);
+        backdrop_write_record('userprotect', $protections);
       }
     }
   }
@@ -159,7 +159,7 @@ abstract class UserProtectWebTestBase extends DrupalWebTestCase {
     $protections['up_type'] = 'admin';
 
     // Create bypass rule.
-    drupal_write_record('userprotect', $protections);
+    backdrop_write_record('userprotect', $protections);
   }
 
   /**
@@ -186,7 +186,7 @@ abstract class UserProtectWebTestBase extends DrupalWebTestCase {
    */
   protected function userprotectPostForm($path, $edit, $submit, array $options = array(), array $headers = array(), $form_html_id = NULL) {
     if (isset($path)) {
-      $this->drupalGet($path, $options);
+      $this->backdropGet($path, $options);
     }
     if ($this->parse()) {
       $edit_save = $edit;
@@ -242,7 +242,7 @@ abstract class UserProtectWebTestBase extends DrupalWebTestCase {
     $edit = array(
       'name' => $this->randomName(),
     );
-    $this->drupalPost('user/' . $account->uid . '/edit', $edit, t('Save'));
+    $this->backdropPost('user/' . $account->uid . '/edit', $edit, t('Save'));
 
     // Re-load the user and assert the user name address changed.
     $account = user_load($account->uid, TRUE);
@@ -291,7 +291,7 @@ abstract class UserProtectWebTestBase extends DrupalWebTestCase {
     $edit = array(
       'mail' => $this->randomName() . '@example.com',
     );
-    $this->drupalPost('user/' . $account->uid . '/edit', $edit, t('Save'));
+    $this->backdropPost('user/' . $account->uid . '/edit', $edit, t('Save'));
 
     // Re-load the user and assert the user name address changed.
     $account = user_load($account->uid, TRUE);
@@ -343,13 +343,13 @@ abstract class UserProtectWebTestBase extends DrupalWebTestCase {
       'pass[pass1]' => $new_pass,
       'pass[pass2]' => $new_pass,
     );
-    $this->drupalPost('user/' . $account->uid . '/edit', $edit, t('Save'));
+    $this->backdropPost('user/' . $account->uid . '/edit', $edit, t('Save'));
 
     // Assert the password changed.
     $account = user_load($account->uid, TRUE);
     $account->pass_raw = $new_pass;
-    $this->drupalLogout();
-    $this->drupalLogin($account);
+    $this->backdropLogout();
+    $this->backdropLogin($account);
   }
 
   /**
@@ -378,8 +378,8 @@ abstract class UserProtectWebTestBase extends DrupalWebTestCase {
     // Assert the password did not change.
     $account = user_load($account->uid, TRUE);
     $account->pass_raw = $expected_pass;
-    $this->drupalLogout();
-    $this->drupalLogin($account);
+    $this->backdropLogout();
+    $this->backdropLogin($account);
   }
 
   /**
@@ -396,7 +396,7 @@ abstract class UserProtectWebTestBase extends DrupalWebTestCase {
     }
 
     // Access edit page of protected user.
-    $this->drupalGet('user/' . $account->uid . '/edit');
+    $this->backdropGet('user/' . $account->uid . '/edit');
     $this->assertResponse(200, $message);
   }
 
@@ -414,7 +414,7 @@ abstract class UserProtectWebTestBase extends DrupalWebTestCase {
     }
 
     // Access edit page of protected user.
-    $this->drupalGet('user/' . $account->uid . '/edit');
+    $this->backdropGet('user/' . $account->uid . '/edit');
     $this->assertResponse(403, $message);
   }
 
@@ -432,7 +432,7 @@ abstract class UserProtectWebTestBase extends DrupalWebTestCase {
     }
 
     // Access edit page of protected user.
-    $this->drupalGet('user/' . $account->uid . '/cancel');
+    $this->backdropGet('user/' . $account->uid . '/cancel');
     $this->assertResponse(200, $message);
   }
 
@@ -450,7 +450,7 @@ abstract class UserProtectWebTestBase extends DrupalWebTestCase {
     }
 
     // Access edit page of protected user.
-    $this->drupalGet('user/' . $account->uid . '/cancel');
+    $this->backdropGet('user/' . $account->uid . '/cancel');
     $this->assertResponse(403, $message);
   }
 }

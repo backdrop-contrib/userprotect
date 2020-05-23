@@ -7,13 +7,6 @@
  */
 
 /**
- * Implements hook_update_last_removed().
- */
-function userprotect_update_last_removed() {
-  return 6001;
-}
-
-/**
  * Implements hook_install().
  */
 function userprotect_install() {
@@ -68,11 +61,7 @@ function userprotect_install() {
     'change own openid',
     'edit own account',
   );
-  user_role_grant_permissions(BACKDROP_AUTHENTICATED_RID, $permissions);
-  // Dynamically generated variable data was detected on the following lines.
-  // /userprotect/userprotect.module line 928
-  // /userprotect/userprotect.module line 777
-  // /userprotect/userprotect.module line 856
+  user_role_grant_permissions(BACKDROP_AUTHENTICATED_ROLE, $permissions);
 }
 
 /**
@@ -161,28 +150,11 @@ function userprotect_schema() {
   return $schema;
 }
 
-// TODO The old hook_update_N functions cannot be applied to Backdrop.
-function userprotect_update_7000() { }
-
-// TODO The old hook_update_N functions cannot be applied to Backdrop.
-function userprotect_update_7001() { }
-
 /**
  * Implements hook_uninstall().
  */
 function userprotect_uninstall() {
 
-  // Drop variables.
-  $variables = array(
-    'userprotect_protection_defaults',
-    'userprotect_autoprotect',
-    'userprotect_administrator_bypass_defaults',
-    'userprotect_role_protections',
-  );
-  foreach ($variables as $variable) {
-    // TODO This variable was probably removed in Backdrop without replacement.
-    variable_del($variable);
-  }
 }
 
 /**
@@ -197,10 +169,10 @@ function userprotect_update_last_removed() {
  */
 function userprotect_update_1000() {
   $config = config('userprotect.settings');
-  $config->set('userprotect_role_protections', update_variable_get('userprotect_role_protections', 'dynamic value in file /userprotect/userprotect.module line 928'));
-  $config->set('userprotect_protection_defaults', update_variable_get('userprotect_protection_defaults', 'dynamic value in file /userprotect/userprotect.module line 777'));
-  $config->set('userprotect_autoprotect', update_variable_get('userprotect_autoprotect', 'FALSE'));
-  $config->set('userprotect_administrator_bypass_defaults', update_variable_get('userprotect_administrator_bypass_defaults', 'dynamic value in file /userprotect/userprotect.module line 856'));
+  $config->set('role_protections', update_variable_get('userprotect_role_protections', 'dynamic value in file /userprotect/userprotect.module line 928'));
+  $config->set('protection_defaults', update_variable_get('userprotect_protection_defaults', 'dynamic value in file /userprotect/userprotect.module line 777'));
+  $config->set('autoprotect', update_variable_get('userprotect_autoprotect', 'FALSE'));
+  $config->set('administrator_bypass_defaults', update_variable_get('userprotect_administrator_bypass_defaults', 'dynamic value in file /userprotect/userprotect.module line 856'));
   update_variable_del('userprotect_role_protections');
   update_variable_del('userprotect_protection_defaults');
   update_variable_del('userprotect_autoprotect');
