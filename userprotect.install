@@ -165,14 +165,16 @@ function userprotect_update_last_removed() {
 }
 
 /**
- * Implements hook_update_N().
+ * Update settings from Drupal to Backdrop.
  */
 function userprotect_update_1000() {
   $config = config('userprotect.settings');
-  $config->set('role_protections', update_variable_get('userprotect_role_protections', 'dynamic value in file /userprotect/userprotect.module line 928'));
-  $config->set('protection_defaults', update_variable_get('userprotect_protection_defaults', 'dynamic value in file /userprotect/userprotect.module line 777'));
-  $config->set('autoprotect', update_variable_get('userprotect_autoprotect', 'FALSE'));
-  $config->set('administrator_bypass_defaults', update_variable_get('userprotect_administrator_bypass_defaults', 'dynamic value in file /userprotect/userprotect.module line 856'));
+  $config->set('role_protections', update_variable_get('userprotect_role_protections', array()));
+  $config->set('protection_defaults', update_variable_get('userprotect_protection_defaults', arrya()));
+  $config->set('autoprotect', update_variable_get('userprotect_autoprotect', 0));
+  $config->set('administrator_bypass_defaults', update_variable_get('userprotect_administrator_bypass_defaults', array()));
+  $config->save();
+
   update_variable_del('userprotect_role_protections');
   update_variable_del('userprotect_protection_defaults');
   update_variable_del('userprotect_autoprotect');

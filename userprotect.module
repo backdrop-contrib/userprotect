@@ -379,9 +379,11 @@ function userprotect_theme() {
  */
 function userprotect_config_info() {
   $prefixes['userprotect.settings'] = array(
-    'label' => t('Module name settings'),
+    'label' => t('User protect settings'),
     'group' => t('Configuration'),
   );
+
+  return $prefixes;
 }
 
 /**
