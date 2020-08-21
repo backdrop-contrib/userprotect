@@ -1,7 +1,7 @@
 {
     "_config_name": "userprotect.settings",
-    "userprotect_role_protections": "dynamic value in file /userprotect/userprotect.module line 928",
-    "userprotect_protection_defaults": "dynamic value in file /userprotect/userprotect.module line 777",
-    "userprotect_autoprotect": "FALSE",
-    "userprotect_administrator_bypass_defaults": "dynamic value in file /userprotect/userprotect.module line 856"
+    "userprotect_role_protections": [],
+    "userprotect_protection_defaults": [],
+    "userprotect_autoprotect": 0,
+    "userprotect_administrator_bypass_defaults": []
 }
