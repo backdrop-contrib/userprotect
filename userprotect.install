@@ -170,7 +170,7 @@ function userprotect_update_last_removed() {
 function userprotect_update_1000() {
   $config = config('userprotect.settings');
   $config->set('role_protections', update_variable_get('userprotect_role_protections', array()));
-  $config->set('protection_defaults', update_variable_get('userprotect_protection_defaults', arrya()));
+  $config->set('protection_defaults', update_variable_get('userprotect_protection_defaults', array()));
   $config->set('autoprotect', update_variable_get('userprotect_autoprotect', 0));
   $config->set('administrator_bypass_defaults', update_variable_get('userprotect_administrator_bypass_defaults', array()));
   $config->save();
